@@ -124,6 +124,31 @@
   .interactive-button {
     @apply transition-all duration-150 active:scale-95;
   }
+  
+  /* Tech-themed components */
+  .tech-card {
+    @apply relative rounded-xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-md shadow-lg hover:shadow-tech-blue/20 transition-all duration-300;
+  }
+  
+  .tech-card-glow {
+    @apply tech-card before:absolute before:inset-0 before:-z-10 before:bg-gradient-to-br before:from-tech-blue/20 before:to-tech-purple/20 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300;
+  }
+  
+  .tech-border {
+    @apply border border-white/10 hover:border-tech-blue/50 transition-colors duration-300;
+  }
+  
+  .tech-bg {
+    @apply bg-gradient-to-br from-slate-900 to-slate-800;
+  }
+  
+  .tech-glow {
+    @apply relative after:absolute after:inset-0 after:-z-10 after:rounded-inherit after:animate-glow;
+  }
+  
+  .tech-button {
+    @apply px-4 py-2 rounded-lg bg-gradient-to-r from-tech-blue to-tech-purple text-white font-medium shadow-md hover:shadow-lg hover:shadow-tech-blue/20 transition-all duration-300 hover:-translate-y-0.5;
+  }
 }
 
 /* Add animation keyframes */

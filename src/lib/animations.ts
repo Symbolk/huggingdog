@@ -34,6 +34,22 @@ export const scaleIn = (delay: number = 0) =>
     'animation-delay-1000': delay === 10,
   });
 
+export const glow = (delay: number = 0) => 
+  cn('animate-glow', {
+    'animation-delay-100': delay === 1,
+    'animation-delay-200': delay === 2,
+    'animation-delay-300': delay === 3,
+    'animation-delay-400': delay === 4,
+    'animation-delay-500': delay === 5,
+  });
+
+export const shimmer = (delay: number = 0) => 
+  cn('animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent bg-[length:500px_100%]', {
+    'animation-delay-100': delay === 1,
+    'animation-delay-200': delay === 2,
+    'animation-delay-300': delay === 3,
+  });
+
 // Animation delays as Tailwind classes
 export const animationDelay = {
   100: 'animation-delay-100',
