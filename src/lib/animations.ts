@@ -2,7 +2,7 @@
 import { cn } from './utils';
 
 export const fadeIn = (delay: number = 0) => 
-  cn('opacity-0 animate-fade-in', {
+  cn('animate-fade-in', {
     'animation-delay-100': delay === 1,
     'animation-delay-200': delay === 2,
     'animation-delay-300': delay === 3,
@@ -13,7 +13,7 @@ export const fadeIn = (delay: number = 0) =>
   });
 
 export const fadeUp = (delay: number = 0) => 
-  cn('opacity-0 animate-fade-up', {
+  cn('animate-fade-up', {
     'animation-delay-100': delay === 1,
     'animation-delay-200': delay === 2,
     'animation-delay-300': delay === 3,
@@ -24,7 +24,7 @@ export const fadeUp = (delay: number = 0) =>
   });
 
 export const scaleIn = (delay: number = 0) => 
-  cn('opacity-0 animate-scale-in', {
+  cn('animate-scale-in', {
     'animation-delay-100': delay === 1,
     'animation-delay-200': delay === 2,
     'animation-delay-300': delay === 3,
