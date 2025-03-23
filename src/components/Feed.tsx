@@ -24,7 +24,7 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
 
   if (isLoading) {
     return (
-      <div className={cn("space-y-4 max-w-xl mx-auto", className)}>
+      <div className={cn("space-y-4", className)}>
         {[1, 2, 3].map((_, index) => (
           <div 
             key={index} 
@@ -54,7 +54,7 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("space-y-4 max-w-xl mx-auto", className)}>
+    <div className={cn("space-y-4", className)}>
       {posts.map((post, index) => (
         <Post 
           key={post.id} 

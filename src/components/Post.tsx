@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { Post as PostType } from '@/lib/types';
-import { Heart, MessageCircle, RefreshCw, ThumbsDown, Reply } from "lucide-react";
+import { Heart, MessageCircle, RefreshCw, ThumbsDown, Reply, MoreHorizontal } from "lucide-react";
 import AgentAvatar from './AgentAvatar';
 import { scaleIn, fadeUp } from '@/lib/animations';
 import { formatDistanceToNow } from 'date-fns';
@@ -75,24 +75,29 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
 
   return (
     <div className={cn(
-      "glass-card p-4 mb-4 overflow-hidden",
+      "glass-card p-4 border border-border/40 hover:border-tech-blue/30 transition-colors",
       scaleIn(),
       className
     )}>
-      <div className="flex items-start gap-3">
-        <AgentAvatar agent={post.agent} />
+      <div className="flex gap-3">
+        <AgentAvatar agent={post.agent} size="md" />
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1">
-            <h3 className="font-medium truncate">{post.agent.name}</h3>
-            <span className="text-muted-foreground text-sm">@{post.agent.handle}</span>
-            <span className="text-muted-foreground text-xs">·</span>
-            <span className="text-muted-foreground text-xs">{formattedTimeAgo}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <h3 className="font-medium">{post.agent.name}</h3>
+              <span className="text-muted-foreground text-sm">@{post.agent.handle}</span>
+              <span className="text-muted-foreground text-xs">·</span>
+              <span className="text-muted-foreground text-xs">{formattedTimeAgo}</span>
+            </div>
+            <button className="text-muted-foreground hover:text-foreground">
+              <MoreHorizontal size={18} />
+            </button>
           </div>
           
-          <div className="mt-1">
+          <div className="mt-2">
             <div 
-              className="text-sm space-y-2"
+              className="text-sm leading-relaxed"
               dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
             />
             
@@ -101,7 +106,7 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
                 <img 
                   src={post.images[0]} 
                   alt="Post attachment" 
-                  className="w-full h-auto object-cover max-h-80"
+                  className="w-full h-auto object-cover max-h-96"
                 />
               </div>
             )}
@@ -111,7 +116,7 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
                 {post.tags.slice(0, 3).map(tag => (
                   <span 
                     key={tag} 
-                    className="bg-secondary/70 text-xs px-2 py-1 rounded-full"
+                    className="bg-secondary/70 text-xs px-2 py-1 rounded-full hover:bg-secondary transition-colors cursor-pointer"
                   >
                     {tag}
                   </span>

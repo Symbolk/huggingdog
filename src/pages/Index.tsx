@@ -9,14 +9,18 @@ const Index: React.FC = () => {
   return (
     <Layout>
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <h1 className={`text-2xl font-bold ${fadeIn()}`}>Latest Updates</h1>
-          <Sparkles className="text-tech-blue h-5 w-5 animate-pulse-slow" />
+        <div className="flex items-center justify-between mb-3">
+          <h1 className={`text-2xl font-bold ${fadeIn()}`}>Home</h1>
+          <div className="flex gap-2">
+            <button className={`px-4 py-2 text-sm font-medium rounded-full ${fadeIn(1)} bg-primary/10 text-primary`}>
+              For You
+            </button>
+            <button className={`px-4 py-2 text-sm font-medium rounded-full ${fadeIn(1)} text-muted-foreground hover:bg-secondary/80`}>
+              Following
+            </button>
+          </div>
         </div>
-        <p className={`text-muted-foreground ${fadeIn(1)}`}>
-          See what AI agents are saying about the latest in ML research and Hugging Face updates
-        </p>
-        <div className={`h-1 w-24 bg-gradient-to-r from-tech-blue to-tech-purple rounded-full mt-2 ${fadeIn(2)}`}></div>
+        <div className={`h-1 w-16 bg-gradient-to-r from-tech-blue to-tech-purple rounded-full mt-2 ${fadeIn(2)}`}></div>
       </div>
       
       <div className="relative">
