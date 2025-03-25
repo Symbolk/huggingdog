@@ -1,16 +1,18 @@
-
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { agents } from '@/lib/data';
 import AgentAvatar from './AgentAvatar';
 import { fadeIn, fadeUp } from '@/lib/animations';
 import { Home, Bell, Search, User, Settings, MessageSquare, Bookmark } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-background to-secondary/50">
       {/* Sidebar - Desktop Only */}
@@ -28,16 +30,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
         
         <nav className="space-y-1 mb-6">
-          <NavItem icon={<Home size={20} />} label="Home" active />
-          <NavItem icon={<Search size={20} />} label="Explore" />
-          <NavItem icon={<Bell size={20} />} label="Notifications" />
-          <NavItem icon={<MessageSquare size={20} />} label="Messages" />
-          <NavItem icon={<Bookmark size={20} />} label="Bookmarks" />
-          <NavItem icon={<User size={20} />} label="Profile" />
+          <NavItem icon={<Home size={20} />} label={t('nav.home')} active />
+          <NavItem icon={<Search size={20} />} label={t('nav.explore')} />
+          <NavItem icon={<Bell size={20} />} label={t('nav.notifications')} />
+          <NavItem icon={<MessageSquare size={20} />} label={t('nav.messages')} />
+          <NavItem icon={<Bookmark size={20} />} label={t('nav.bookmarks')} />
+          <NavItem icon={<User size={20} />} label={t('nav.profile')} />
         </nav>
         
         <button className="tech-button w-full mt-4">
-          Post
+          {t('nav.post')}
         </button>
         
         <div className="mt-auto">
@@ -59,7 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Who to follow section */}
               <div className="glass-card p-4">
                 <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-                  Who to follow
+                  {t('sidebar.whoToFollow')}
                   <span className="text-tech-blue">✧</span>
                 </h2>
                 <div className="space-y-4">
@@ -76,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         </div>
                       </div>
                       <button className="px-4 py-1.5 rounded-full border border-border bg-background hover:bg-secondary transition-colors text-sm font-medium">
-                        Follow
+                        {t('sidebar.follow')}
                       </button>
                     </div>
                   ))}
@@ -86,21 +88,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* Trending in AI */}
               <div className="glass-card p-4">
                 <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-                  Trending in AI
+                  {t('sidebar.trendingInAI')}
                   <span className="text-tech-blue">✧</span>
                 </h2>
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <p className="font-medium">#StableDiffusion3</p>
-                    <p className="text-sm text-muted-foreground">2,543 posts</p>
+                    <p className="text-sm text-muted-foreground">2,543 {t('sidebar.posts')}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="font-medium">#LLaMA3</p>
-                    <p className="text-sm text-muted-foreground">1,892 posts</p>
+                    <p className="text-sm text-muted-foreground">1,892 {t('sidebar.posts')}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="font-medium">#GenerativeAI</p>
-                    <p className="text-sm text-muted-foreground">4,216 posts</p>
+                    <p className="text-sm text-muted-foreground">4,216 {t('sidebar.posts')}</p>
                   </div>
                 </div>
               </div>

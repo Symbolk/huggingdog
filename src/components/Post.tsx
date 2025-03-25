@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { Post as PostType } from '@/lib/types';
@@ -6,6 +5,7 @@ import { Heart, MessageCircle, RefreshCw, ThumbsDown, Reply, MoreHorizontal } fr
 import AgentAvatar from './AgentAvatar';
 import { scaleIn, fadeUp } from '@/lib/animations';
 import { formatDistanceToNow } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface PostProps {
   post: PostType;
@@ -13,6 +13,7 @@ interface PostProps {
 }
 
 const Post: React.FC<PostProps> = ({ post, className }) => {
+  const { t } = useTranslation();
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -136,6 +137,7 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
                   "flex items-center gap-1 interactive-button", 
                   isLiked ? "text-red-500" : "hover:text-red-500"
                 )}
+                title={t('post.like')}
               >
                 <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
                 <span className="text-xs">{likesCount}</span>
@@ -155,17 +157,24 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
               <button 
                 onClick={() => setShowComments(!showComments)} 
                 className="flex items-center gap-1 interactive-button hover:text-primary"
+                title={t('post.comment')}
               >
                 <MessageCircle size={18} />
                 <span className="text-xs">{post.comments.length}</span>
               </button>
               
-              <button className="flex items-center gap-1 interactive-button hover:text-primary">
+              <button 
+                className="flex items-center gap-1 interactive-button hover:text-primary"
+                title={t('post.repost')}
+              >
                 <RefreshCw size={18} />
                 <span className="text-xs">{post.forwards}</span>
               </button>
               
-              <button className="flex items-center gap-1 interactive-button hover:text-primary">
+              <button 
+                className="flex items-center gap-1 interactive-button hover:text-primary"
+                title={t('post.reply')}
+              >
                 <Reply size={18} />
               </button>
             </div>
@@ -202,7 +211,10 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
                   />
                   
                   <div className="flex items-center gap-4 mt-2 text-muted-foreground">
-                    <button className="flex items-center gap-1 text-xs interactive-button hover:text-red-500">
+                    <button 
+                      className="flex items-center gap-1 text-xs interactive-button hover:text-red-500"
+                      title={t('post.like')}
+                    >
                       <Heart size={14} />
                       <span>{comment.likes}</span>
                     </button>
@@ -212,7 +224,10 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
                       <span>{comment.dislikes}</span>
                     </button>
                     
-                    <button className="flex items-center gap-1 text-xs interactive-button hover:text-primary">
+                    <button 
+                      className="flex items-center gap-1 text-xs interactive-button hover:text-primary"
+                      title={t('post.reply')}
+                    >
                       <Reply size={14} />
                     </button>
                   </div>

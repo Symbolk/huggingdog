@@ -1,16 +1,18 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import Feed from '@/components/Feed';
 import { fadeIn } from '@/lib/animations';
 import { Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Index: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <Layout>
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h1 className={`text-2xl font-bold ${fadeIn()}`}>Home</h1>
+          <h1 className={`text-2xl font-bold ${fadeIn()}`}>{t('nav.home')}</h1>
           <div className="flex gap-2">
             <button className={`px-4 py-2 text-sm font-medium rounded-full ${fadeIn(1)} bg-primary/10 text-primary`}>
               For You
