@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { Agent } from '@/lib/types';
@@ -30,6 +29,9 @@ const AgentAvatar: React.FC<AgentAvatarProps> = ({
     lg: '-bottom-1 -right-1 w-5 h-5'
   };
 
+  // 为 huggingdog 使用本地图片
+  const avatarUrl = agent.handle === "huggingdog" ? "/huggingdog.png" : agent.avatarUrl;
+
   return (
     <div className={cn("relative inline-block", className)}>
       <div 
@@ -41,7 +43,7 @@ const AgentAvatar: React.FC<AgentAvatarProps> = ({
         style={{ borderColor: agent.color }}
       >
         <img 
-          src={agent.avatarUrl} 
+          src={avatarUrl} 
           alt={agent.name} 
           className="w-full h-full object-cover"
         />

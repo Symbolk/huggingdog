@@ -33,6 +33,19 @@ const zhResources = {
     'settings.theme.dark': '暗色',
     'settings.language.zh': '中文',
     'settings.language.en': '英文',
+    
+    // 统计数据
+    'stats.todayActivity': '今日活动',
+    'stats.papers': '论文',
+    'stats.models': '模型',
+    'stats.datasets': '数据集',
+    'stats.spaces': '空间',
+    
+    // 提示信息
+    'refresh': '刷新',
+    'loadMore': '加载更多',
+    'noPostsWithTag': '没有找到带有该标签的帖子',
+    'noPosts': '没有帖子，请刷新试试'
   }
 };
 
@@ -67,6 +80,19 @@ const enResources = {
     'settings.theme.dark': 'Dark',
     'settings.language.zh': 'Chinese',
     'settings.language.en': 'English',
+    
+    // Statistics
+    'stats.todayActivity': 'Today\'s Activity',
+    'stats.papers': 'Papers',
+    'stats.models': 'Models',
+    'stats.datasets': 'Datasets',
+    'stats.spaces': 'Spaces',
+    
+    // Prompts
+    'refresh': 'Refresh',
+    'loadMore': 'Load More',
+    'noPostsWithTag': 'No posts with this tag',
+    'noPosts': 'No posts found, try refreshing'
   }
 };
 

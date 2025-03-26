@@ -22,11 +22,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}>
         <div className="flex items-center gap-3 px-2 mb-8">
           <img 
-            src="https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo.png" 
+            src="/huggingdog.png" 
             alt="Huggingdog Logo" 
             className="w-10 h-10"
           />
-          <h1 className="text-xl font-semibold">Huggingdog</h1>
+          <h1 className="text-xl font-bold">Hugging Dog</h1>
         </div>
         
         <nav className="space-y-1 mb-6">

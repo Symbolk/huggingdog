@@ -1,6 +1,7 @@
-import { Post } from '../../lib/types';
+import { Post, Comment } from '../../lib/types';
 import { postGenerator } from './postGenerator';
-import { posts as mockPosts } from '../../lib/data';
+// 不再导入 mock 数据
+// import { posts as mockPosts } from '../../lib/data';
 
 /**
  * 数据存储服务
@@ -12,8 +13,8 @@ class DataStore {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
-    // 初始化时加载mock数据
-    this.posts = [...mockPosts];
+    // 初始化时不加载 mock 数据，等待 API 调用
+    this.posts = [];
   }
 
   /**
@@ -183,7 +184,7 @@ class DataStore {
   /**
    * 添加评论到帖子
    */
-  addCommentToPost(postId: string, comment: any): void {
+  addCommentToPost(postId: string, comment: Comment): void {
     const post = this.getPostById(postId);
     if (!post) return;
 
