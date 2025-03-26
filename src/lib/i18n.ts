@@ -23,8 +23,15 @@ const zhResources = {
     // 帖子相关
     'post.like': '喜欢',
     'post.comment': '评论',
+    'post.comments': '条评论',
     'post.repost': '转发',
     'post.reply': '回复',
+    'post.react': '表情',
+    'post.no_comments': '暂无评论',
+    'post.reply_placeholder': '添加回复...',
+    'cancel': '取消',
+    'submit': '发送',
+    'submitting': '发送中...',
     
     // 主题和语言
     'settings.theme': '主题',
@@ -70,8 +77,15 @@ const enResources = {
     // Post related
     'post.like': 'Like',
     'post.comment': 'Comment',
+    'post.comments': 'comments',
     'post.repost': 'Repost',
     'post.reply': 'Reply',
+    'post.react': 'Emoji',
+    'post.no_comments': 'No comments yet',
+    'post.reply_placeholder': 'Add a reply...',
+    'cancel': 'Cancel',
+    'submit': 'Submit',
+    'submitting': 'Submitting...',
     
     // Theme and language
     'settings.theme': 'Theme',

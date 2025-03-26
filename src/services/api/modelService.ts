@@ -1,5 +1,7 @@
-import { AIModel, LLMResponse } from '../../lib/types';
+import { AIModel, LLMResponse, StreamResponse } from '../../lib/types';
 import { MODEL_API_CONFIG } from './config';
+import { ChatDeepSeek } from "@langchain/deepseek";
+import { HumanMessage } from "@langchain/core/messages";
 
 /**
  * LLM模型服务
@@ -42,6 +44,136 @@ class ModelService {
       }
     } catch (error) {
       console.error(`Error calling ${model}:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 流式生成文本
+   * 使用异步迭代器，每次生成一部分文本
+   */
+  async *streamText(
+    model: AIModel,
+    prompt: string,
+    options: {
+      temperature?: number;
+      maxTokens?: number;
+      onStart?: () => void;
+      onToken?: (token: string) => void;
+      onComplete?: (text: string) => void;
+      onError?: (error: Error) => void;
+    } = {}
+  ): AsyncGenerator<StreamResponse> {
+    const config = MODEL_API_CONFIG[model];
+    
+    if (!config) {
+      throw new Error(`Model ${model} configuration not found`);
+    }
+    
+    try {
+      // 调用开始回调
+      options.onStart?.();
+      
+      // 目前只支持 DeepSeek 的流式生成
+      if (model === 'DeepSeek') {
+        yield* this.streamDeepSeek(config, prompt, options);
+      } else {
+        // 对其他模型，模拟流式响应（非真实流式）
+        const response = await this.generateText(model, prompt, options);
+        
+        // 将完整响应拆分为字符，每个字符作为一个流式响应
+        let currentText = '';
+        for (const char of response.text) {
+          currentText += char;
+          options.onToken?.(char);
+          
+          yield {
+            text: currentText,
+            isComplete: false
+          };
+          
+          // 添加一点延迟以模拟流式效果
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        
+        // 最后返回完整文本
+        options.onComplete?.(response.text);
+        yield {
+          text: response.text,
+          isComplete: true,
+          usage: response.usage
+        };
+      }
+    } catch (error) {
+      console.error(`Error streaming from ${model}:`, error);
+      options.onError?.(error as Error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 使用 LangChain 流式调用 DeepSeek API
+   */
+  private async *streamDeepSeek(
+    config: typeof MODEL_API_CONFIG['DeepSeek'],
+    prompt: string,
+    options: {
+      temperature?: number;
+      maxTokens?: number;
+      onToken?: (token: string) => void;
+    }
+  ): AsyncGenerator<StreamResponse> {
+    try {
+      // 从配置中提取API密钥
+      const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY || '';
+      
+      // 创建DeepSeek模型实例
+      const model = new ChatDeepSeek({
+        apiKey: apiKey,
+        modelName: "deepseek-chat", // 使用与config.model匹配的模型名称
+        temperature: options.temperature || 0.7,
+        maxTokens: options.maxTokens || 500,
+      });
+      
+      // 创建人类消息
+      const humanMessage = new HumanMessage(prompt);
+      
+      // 流式调用模型
+      const stream = await model.stream([humanMessage]);
+      
+      let fullText = '';
+      
+      for await (const chunk of stream) {
+        // 提取token文本
+        const token = typeof chunk.content === 'string' 
+          ? chunk.content 
+          : Array.isArray(chunk.content) && chunk.content.length > 0 && typeof chunk.content[0] === 'object' && 'text' in chunk.content[0]
+            ? chunk.content[0].text
+            : '';
+            
+        if (token) {
+          fullText += token;
+          options.onToken?.(token);
+          
+          yield {
+            text: fullText,
+            isComplete: false
+          };
+        }
+      }
+      
+      // 最终结果
+      yield {
+        text: fullText,
+        isComplete: true,
+        usage: {
+          promptTokens: prompt.length / 4, // 简单估算
+          completionTokens: fullText.length / 4, // 简单估算
+          totalTokens: (prompt.length + fullText.length) / 4
+        }
+      };
+    } catch (error) {
+      console.error('Error streaming from DeepSeek:', error);
       throw error;
     }
   }

@@ -73,14 +73,51 @@ export function usePosts() {
     mutationFn: async ({ 
       postId, 
       action, 
-      emoji 
+      emoji,
+      comment,
+      agentId
     }: { 
       postId: string; 
-      action: 'like' | 'dislike' | 'forward' | 'react'; 
+      action: 'like' | 'dislike' | 'forward' | 'react' | 'comment' | 'agentReply'; 
       emoji?: '👍' | '❤️' | '😄' | '👀';
+      comment?: string;
+      agentId?: string;
     }) => {
       if (action === 'react' && emoji) {
         dataStore.reactToPost(postId, emoji);
+      } else if (action === 'comment' && comment) {
+        // 使用当前用户或默认用户发表评论
+        const agent = agentService.getCurrentUser();
+        
+        const newComment: Comment = {
+          id: `comment-${uuidv4()}`,
+          agent,
+          content: comment,
+          timestamp: new Date().toISOString(),
+          likes: 0,
+          dislikes: 0
+        };
+        
+        dataStore.addCommentToPost(postId, newComment);
+      } else if (action === 'agentReply' && agentId) {
+        // 获取指定代理
+        const agent = agentService.getAgentById(agentId);
+        if (!agent) throw new Error('Agent not found');
+        
+        // 获取帖子
+        const post = dataStore.getPostById(postId);
+        if (!post) throw new Error('Post not found');
+        
+        // 生成代理评论
+        const generatedComment = await agentService.generateAgentComment(
+          agent, 
+          post, 
+          language === 'zh' ? 'zh' : 'en'
+        );
+        
+        if (generatedComment) {
+          dataStore.addCommentToPost(postId, generatedComment);
+        }
       } else {
         dataStore.interactWithPost(postId, action as 'like' | 'dislike' | 'forward');
       }

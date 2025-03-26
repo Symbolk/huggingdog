@@ -1,4 +1,4 @@
-import { Post, Comment } from '../../lib/types';
+import { Post, Comment, GenerationStatus, StreamingPost, StreamingComment } from '../../lib/types';
 import { postGenerator } from './postGenerator';
 // 不再导入 mock 数据
 // import { posts as mockPosts } from '../../lib/data';
@@ -9,6 +9,8 @@ import { postGenerator } from './postGenerator';
  */
 class DataStore {
   private posts: Post[] = [];
+  private streamingPosts: Map<string, StreamingPost> = new Map(); // 存储正在生成中的帖子
+  private streamingComments: Map<string, StreamingComment> = new Map(); // 存储正在生成中的评论
   private isLoading: boolean = false;
   private listeners: Set<() => void> = new Set();
 
@@ -18,10 +20,68 @@ class DataStore {
   }
 
   /**
-   * 获取所有帖子
+   * 获取所有帖子，包括生成中的帖子
    */
-  getPosts(): Post[] {
-    return this.posts;
+  getPosts(): (Post | StreamingPost)[] {
+    // 合并普通帖子和流式生成中的帖子
+    const allStreamingPosts = Array.from(this.streamingPosts.values());
+    return [...this.posts, ...allStreamingPosts];
+  }
+
+  /**
+   * 获取生成中的帖子
+   */
+  getStreamingPosts(): StreamingPost[] {
+    return Array.from(this.streamingPosts.values());
+  }
+
+  /**
+   * 获取生成中的评论
+   */
+  getStreamingComments(): StreamingComment[] {
+    return Array.from(this.streamingComments.values());
+  }
+  
+  /**
+   * 添加或更新生成中的帖子
+   */
+  updateStreamingPost(post: StreamingPost): void {
+    this.streamingPosts.set(post.id, post);
+    
+    // 如果帖子生成完成，将其从streaming列表中移除，添加到普通帖子中
+    if (post.generationStatus === GenerationStatus.COMPLETE) {
+      this.streamingPosts.delete(post.id);
+      
+      // 从StreamingPost中提取Post属性，排除generationStatus
+      const { generationStatus, ...postWithoutStatus } = post;
+      
+      this.addPost(postWithoutStatus as Post);
+    } else {
+      this.notifyListeners();
+    }
+  }
+  
+  /**
+   * 添加或更新生成中的评论
+   */
+  updateStreamingComment(postId: string, comment: StreamingComment): void {
+    this.streamingComments.set(comment.id, comment);
+    
+    // 如果评论生成完成，将其从streaming列表中移除，添加到帖子中
+    if (comment.generationStatus === GenerationStatus.COMPLETE) {
+      this.streamingComments.delete(comment.id);
+      
+      // 从StreamingComment中提取Comment属性，排除generationStatus
+      const { generationStatus, ...commentWithoutStatus } = comment;
+      
+      this.addCommentToPost(postId, commentWithoutStatus as Comment);
+    } else {
+      // 更新相关帖子以显示正在生成中的评论
+      const post = this.getPostById(postId);
+      if (post) {
+        this.notifyListeners();
+      }
+    }
   }
 
   /**
@@ -95,10 +155,25 @@ class DataStore {
       this.isLoading = true;
       this.notifyListeners();
 
-      const posts = await postGenerator.generateMixedLatestPosts(limit, language);
-      
-      // 重置帖子列表，或者与现有帖子合并
-      this.posts = [...posts];
+      // 使用流式生成方法替代之前的批量生成
+      await postGenerator.generateMixedLatestPostsStreaming(limit, language, {
+        onPostStart: (streamingPost) => {
+          // 当帖子开始生成时添加到流式帖子列表
+          this.updateStreamingPost(streamingPost);
+        },
+        onPostUpdate: (streamingPost) => {
+          // 当帖子内容更新时更新流式帖子
+          this.updateStreamingPost(streamingPost);
+        },
+        onCommentStart: (postId, streamingComment) => {
+          // 当评论开始生成时添加到流式评论列表
+          this.updateStreamingComment(postId, streamingComment);
+        },
+        onCommentUpdate: (postId, streamingComment) => {
+          // 当评论内容更新时更新流式评论
+          this.updateStreamingComment(postId, streamingComment);
+        }
+      });
       
     } catch (error) {
       console.error('Failed to load latest content:', error);
@@ -116,10 +191,25 @@ class DataStore {
       this.isLoading = true;
       this.notifyListeners();
 
-      const posts = await postGenerator.generateMixedLatestPosts(limit, language);
-      
-      // 添加到现有帖子中
-      this.posts = [...this.posts, ...posts];
+      // 使用流式生成方法替代之前的批量生成
+      await postGenerator.generateMixedLatestPostsStreaming(limit, language, {
+        onPostStart: (streamingPost) => {
+          // 当帖子开始生成时添加到流式帖子列表
+          this.updateStreamingPost(streamingPost);
+        },
+        onPostUpdate: (streamingPost) => {
+          // 当帖子内容更新时更新流式帖子
+          this.updateStreamingPost(streamingPost);
+        },
+        onCommentStart: (postId, streamingComment) => {
+          // 当评论开始生成时添加到流式评论列表
+          this.updateStreamingComment(postId, streamingComment);
+        },
+        onCommentUpdate: (postId, streamingComment) => {
+          // 当评论内容更新时更新流式评论
+          this.updateStreamingComment(postId, streamingComment);
+        }
+      });
       
     } catch (error) {
       console.error('Failed to load more content:', error);

@@ -12,6 +12,8 @@ export const HUGGINGDOG_POST_PROMPT = (content: string, language: 'zh' | 'en' = 
 帖子应当简明扼要但内容丰富，包含关键信息，并使用适当的表情符号增加趣味性。
 可以提出一个思考问题或讨论点，以鼓励其他用户参与讨论。
 
+必须以中文回复。
+
 以下是内容信息：
 ${content}
 
@@ -21,6 +23,7 @@ The post should have personality, expressing your enthusiasm and professional in
 The post should be concise yet informative, including key information, and using appropriate emojis to add interest.
 You may pose a thought-provoking question or discussion point to encourage other users to engage.
 
+You must reply in English.
 Here is the content information:
 ${content}
 
@@ -51,6 +54,7 @@ ${agentPersonality}
 4. 反映你的个性特征和专业背景
 5. 简洁（不超过100字）
 
+必须以中文回复。
 如果你对这个帖子不感兴趣，只需回复"不感兴趣"。
 只需直接提供评论内容，不需要任何前言或说明。`
     : `You are an AI assistant with the following personality traits:
@@ -66,6 +70,7 @@ Based on your personality traits, if you find this post interesting, please gene
 4. Reflect your personality traits and professional background
 5. Be concise (under 100 words)
 
+You must reply in English.
 If you're not interested in this post, simply reply "Not interested".
 Provide only the comment content, without any preamble or explanation.`;
 
@@ -99,7 +104,7 @@ ${agentPersonality}
 - 评论：是/否
 - 转发：是/否
 
-请直接回复你选择的表情（如"👍"）以及是否评论和转发，不需要JSON格式。
+请直接回复你选择的表情（如"👍"）以及是否评论和转发，不需要JSON格式。必须以中文回复。
 例如：
 👍
 评论：是
@@ -129,4 +134,4 @@ Comment: Yes
 Forward: No`;
 
   return basePrompt;
-}; 
+};

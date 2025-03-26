@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Agent, AgentInteraction, AgentPersonality, Comment, Post } from '../../lib/types';
+import { Agent, AgentInteraction, AgentPersonality, Comment, Post, GenerationStatus, StreamingPost, StreamingComment } from '../../lib/types';
 import { modelService } from '../api/modelService';
 import { AGENT_COMMENT_PROMPT, AGENT_INTERACTION_DECISION_PROMPT, HUGGINGDOG_POST_PROMPT } from './prompts';
 import { agents as mockAgents } from '../../lib/data';
@@ -367,6 +367,236 @@ class AgentService {
     }
 
     return updatedPost;
+  }
+
+  /**
+   * 流式生成HuggingDog的帖子
+   */
+  async *streamHuggingdogPost(
+    content: string, 
+    language: 'zh' | 'en' = 'zh',
+    callbacks?: {
+      onStart?: () => void;
+      onToken?: (token: string) => void;
+      onComplete?: (post: Post) => void;
+      onError?: (error: Error) => void;
+    }
+  ): AsyncGenerator<StreamingPost> {
+    const huggingdog = this.getAgentById('agent-1');
+    
+    if (!huggingdog) {
+      throw new Error('Huggingdog agent not found');
+    }
+
+    const prompt = HUGGINGDOG_POST_PROMPT(content, language);
+    const postId = `post-${uuidv4()}`;
+    
+    // 创建初始流式帖子
+    const initialPost: StreamingPost = {
+      id: postId,
+      agent: huggingdog,
+      content: '',
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
+      forwards: 0,
+      comments: [],
+      tags: [],
+      generationStatus: GenerationStatus.PENDING
+    };
+    
+    try {
+      // 通知开始生成
+      callbacks?.onStart?.();
+      yield initialPost;
+      
+      // 流式生成内容
+      const textStream = modelService.streamText(
+        huggingdog.model, 
+        prompt, 
+        {
+          temperature: 0.7,
+          maxTokens: 300,
+          onToken: (token) => {
+            callbacks?.onToken?.(token);
+          }
+        }
+      );
+      
+      // 处理流式响应
+      for await (const chunk of textStream) {
+        // 提取可能的标签
+        const tags = this.extractTags(chunk.text);
+        
+        // 创建更新后的帖子
+        const updatedPost: StreamingPost = {
+          ...initialPost,
+          content: chunk.text,
+          tags,
+          generationStatus: chunk.isComplete 
+            ? GenerationStatus.COMPLETE 
+            : GenerationStatus.STREAMING
+        };
+        
+        yield updatedPost;
+        
+        // 如果生成完成，调用完成回调
+        if (chunk.isComplete) {
+          const finalPost: Post = {
+            id: postId,
+            agent: huggingdog,
+            content: chunk.text,
+            timestamp: new Date().toISOString(),
+            likes: 0,
+            dislikes: 0,
+            forwards: 0,
+            comments: [],
+            tags
+          };
+          
+          callbacks?.onComplete?.(finalPost);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate Huggingdog post:', error);
+      // 返回错误状态的帖子
+      const errorPost: StreamingPost = {
+        ...initialPost,
+        generationStatus: GenerationStatus.ERROR
+      };
+      
+      yield errorPost;
+      callbacks?.onError?.(error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * 流式生成Agent评论
+   */
+  async *streamAgentComment(
+    agent: Agent, 
+    post: Post, 
+    language: 'zh' | 'en' = 'zh',
+    callbacks?: {
+      onStart?: () => void;
+      onToken?: (token: string) => void;
+      onComplete?: (comment: Comment) => void;
+      onError?: (error: Error) => void;
+    }
+  ): AsyncGenerator<StreamingComment> {
+    // 获取Agent的个性
+    const personality = this.agentPersonalities.get(agent.id);
+    
+    if (!personality) {
+      throw new Error(`Personality for agent ${agent.id} not found`);
+    }
+
+    // 构建个性描述
+    const personalityDesc = `
+姓名: ${personality.name}
+兴趣: ${personality.interests.join(', ')}
+互动频率: ${personality.interactionFrequency * 10}/10
+主见程度: ${personality.opinionated * 10}/10
+回复风格: ${personality.responseStyle}
+`;
+
+    const prompt = AGENT_COMMENT_PROMPT(personalityDesc, post.content, language);
+    const commentId = `comment-${uuidv4()}`;
+    
+    // 创建初始流式评论
+    const initialComment: StreamingComment = {
+      id: commentId,
+      agent: agent,
+      content: '',
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
+      generationStatus: GenerationStatus.PENDING
+    };
+    
+    try {
+      // 通知开始生成
+      callbacks?.onStart?.();
+      yield initialComment;
+      
+      // 流式生成内容
+      const textStream = modelService.streamText(
+        agent.model, 
+        prompt, 
+        {
+          temperature: 0.8,
+          maxTokens: 200,
+          onToken: (token) => {
+            callbacks?.onToken?.(token);
+          }
+        }
+      );
+      
+      // 处理流式响应
+      for await (const chunk of textStream) {
+        const commentText = chunk.text.trim();
+        
+        // 如果Agent不感兴趣，返回null
+        if (commentText === '不感兴趣' || commentText === 'Not interested') {
+          return;
+        }
+        
+        // 创建更新后的评论
+        const updatedComment: StreamingComment = {
+          ...initialComment,
+          content: commentText,
+          generationStatus: chunk.isComplete 
+            ? GenerationStatus.COMPLETE 
+            : GenerationStatus.STREAMING
+        };
+        
+        yield updatedComment;
+        
+        // 如果生成完成，调用完成回调
+        if (chunk.isComplete) {
+          const finalComment: Comment = {
+            id: commentId,
+            agent: agent,
+            content: commentText,
+            timestamp: new Date().toISOString(),
+            likes: 0,
+            dislikes: 0
+          };
+          
+          callbacks?.onComplete?.(finalComment);
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to generate comment for agent ${agent.id}:`, error);
+      // 返回错误状态的评论
+      const errorComment: StreamingComment = {
+        ...initialComment,
+        generationStatus: GenerationStatus.ERROR
+      };
+      
+      yield errorComment;
+      callbacks?.onError?.(error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取当前用户的Agent信息（模拟登录用户）
+   */
+  getCurrentUser(): Agent {
+    // 返回一个固定的Agent作为当前用户
+    // 通常在实际系统中，这会从用户会话或认证系统中获取
+    return {
+      id: 'current-user',
+      name: '当前用户',
+      handle: 'user',
+      avatarUrl: 'https://ui-avatars.com/api/?name=User&background=random',
+      model: 'DeepSeek',
+      description: '站点用户',
+      color: '#3498db',
+      verified: true
+    };
   }
 }
 

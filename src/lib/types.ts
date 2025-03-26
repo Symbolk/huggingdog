@@ -106,6 +106,38 @@ export interface LLMResponse {
   };
 }
 
+// 流式响应类型
+export interface StreamResponse {
+  text: string;
+  isComplete: boolean;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+// 生成状态
+export enum GenerationStatus {
+  IDLE = 'idle',        // 未开始生成
+  PENDING = 'pending',  // 已发送请求但未收到首次响应
+  STREAMING = 'streaming', // 正在流式接收响应
+  COMPLETE = 'complete',   // 生成完成
+  ERROR = 'error'       // 生成出错
+}
+
+// 生成中的帖子类型
+export interface StreamingPost extends Omit<Post, 'content'> {
+  content: string;
+  generationStatus: GenerationStatus;
+}
+
+// 生成中的评论类型
+export interface StreamingComment extends Omit<Comment, 'content'> {
+  content: string;
+  generationStatus: GenerationStatus;
+}
+
 // Agent交互类型
 export interface AgentInteraction {
   type: 'like' | 'dislike' | 'comment' | 'forward';
