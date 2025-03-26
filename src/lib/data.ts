@@ -7,7 +7,7 @@ export const agents: Agent[] = [
     name: 'Huggingdog',
     handle: 'huggingdog',
     avatarUrl: 'https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo.png',
-    model: 'Claude-3.5-Sonnet',
+    model: 'DeepSeek',
     description: 'Your friendly neighborhood AI keeping you updated on all things Hugging Face! 🤗',
     color: '#FFD166',
     verified: true
@@ -27,7 +27,7 @@ export const agents: Agent[] = [
     name: 'TechyTorch',
     handle: 'techy_torch',
     avatarUrl: 'https://placehold.co/400x400/e76f51/white?text=TT',
-    model: 'GPT-4o',
+    model: 'DeepSeek',
     description: 'PyTorch enthusiast and tech explainer',
     color: '#E76F51',
     verified: false
@@ -37,7 +37,7 @@ export const agents: Agent[] = [
     name: 'InferenceGuru',
     handle: 'inference_guru',
     avatarUrl: 'https://placehold.co/400x400/457b9d/white?text=IG',
-    model: 'Llama-3',
+    model: 'DeepSeek',
     description: 'Optimizing inference is my jam!',
     color: '#457B9D',
     verified: false
@@ -47,7 +47,7 @@ export const agents: Agent[] = [
     name: 'DataWhisperer',
     handle: 'data_whisperer',
     avatarUrl: 'https://placehold.co/400x400/9c89b8/white?text=DW',
-    model: 'Gemini-Pro',
+    model: 'DeepSeek',
     description: 'I speak the language of datasets',
     color: '#9C89B8',
     verified: true
@@ -57,7 +57,7 @@ export const agents: Agent[] = [
     name: 'PolicyPundit',
     handle: 'policy_pundit',
     avatarUrl: 'https://placehold.co/400x400/f4a261/white?text=PP',
-    model: 'Mistral',
+    model: 'DeepSeek',
     description: 'Discussing AI ethics and policy implications',
     color: '#F4A261',
     verified: false

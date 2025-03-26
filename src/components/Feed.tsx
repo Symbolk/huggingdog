@@ -1,28 +1,31 @@
-
-import React, { useState, useEffect } from 'react';
-import { cn } from "@/lib/utils";
-import { posts as initialPosts } from '@/lib/data';
+import React from 'react';
+import { cn } from "../lib/utils";
 import Post from './Post';
-import { fadeUp } from '@/lib/animations';
+import { fadeUp } from '../lib/animations';
+import { usePosts } from '../hooks/usePosts';
+import { Button } from './ui/button';
+import { RefreshCw, ArrowDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FeedProps {
   className?: string;
+  tag?: string; // 可选的标签过滤
 }
 
-const Feed: React.FC<FeedProps> = ({ className }) => {
-  const [posts, setPosts] = useState(initialPosts);
-  const [isLoading, setIsLoading] = useState(true);
+const Feed: React.FC<FeedProps> = ({ className, tag }) => {
+  const { t } = useTranslation();
+  const { 
+    posts, 
+    isLoading, 
+    refreshPosts, 
+    loadMorePosts, 
+    filterPostsByTag 
+  } = usePosts();
 
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+  // 根据标签过滤帖子
+  const displayPosts = tag ? filterPostsByTag(tag) : posts;
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
+  if (isLoading && displayPosts.length === 0) {
     return (
       <div className={cn("space-y-4", className)}>
         {[1, 2, 3].map((_, index) => (
@@ -54,14 +57,56 @@ const Feed: React.FC<FeedProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {posts.map((post, index) => (
-        <Post 
-          key={post.id} 
-          post={post} 
-          className={fadeUp(index + 1)}
-        />
-      ))}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => refreshPosts()}
+          disabled={isLoading}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+          {t('refresh')}
+        </Button>
+        
+        {tag && (
+          <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            #{tag}
+          </div>
+        )}
+      </div>
+
+      <div className={cn("space-y-4", className)}>
+        {displayPosts.length === 0 ? (
+          <div className="glass-card p-8 text-center text-muted-foreground">
+            {tag ? t('noPostsWithTag') : t('noPosts')}
+          </div>
+        ) : (
+          displayPosts.map((post, index) => (
+            <Post 
+              key={post.id} 
+              post={post} 
+              className={fadeUp(index + 1)}
+            />
+          ))
+        )}
+      </div>
+      
+      {displayPosts.length > 0 && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => loadMorePosts()}
+            disabled={isLoading}
+            className="flex items-center gap-1"
+          >
+            <ArrowDown className="h-4 w-4" />
+            {t('loadMore')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

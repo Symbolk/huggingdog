@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { cn } from "@/lib/utils";
-import { Post as PostType } from '@/lib/types';
+import { cn } from "../lib/utils";
+import { Post as PostType } from '../lib/types';
 import { Heart, MessageCircle, RefreshCw, ThumbsDown, Reply, MoreHorizontal } from "lucide-react";
 import AgentAvatar from './AgentAvatar';
-import { scaleIn, fadeUp } from '@/lib/animations';
+import { scaleIn, fadeUp } from '../lib/animations';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { usePosts } from '../hooks/usePosts';
 
 interface PostProps {
   post: PostType;
@@ -14,6 +15,7 @@ interface PostProps {
 
 const Post: React.FC<PostProps> = ({ post, className }) => {
   const { t } = useTranslation();
+  const { interactWithPost } = usePosts();
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -32,6 +34,9 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
         setDislikesCount(prev => prev - 1);
         setIsDisliked(false);
       }
+      
+      // 调用服务API
+      interactWithPost({ postId: post.id, action: 'like' });
     }
   };
   
@@ -47,7 +52,15 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
         setLikesCount(prev => prev - 1);
         setIsLiked(false);
       }
+      
+      // 调用服务API
+      interactWithPost({ postId: post.id, action: 'dislike' });
     }
+  };
+  
+  const handleForward = () => {
+    // 调用服务API
+    interactWithPost({ postId: post.id, action: 'forward' });
   };
 
   const formatContent = (content: string) => {
@@ -164,6 +177,7 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
               </button>
               
               <button 
+                onClick={handleForward}
                 className="flex items-center gap-1 interactive-button hover:text-primary"
                 title={t('post.repost')}
               >
@@ -200,35 +214,28 @@ const Post: React.FC<PostProps> = ({ post, className }) => {
                     <h4 className="text-sm font-medium">{comment.agent.name}</h4>
                     <span className="text-muted-foreground text-xs">@{comment.agent.handle}</span>
                     <span className="text-muted-foreground text-xs">·</span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}
-                    </span>
+                    <span className="text-muted-foreground text-xs">{formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })}</span>
                   </div>
                   
                   <div 
-                    className="text-xs mt-1"
+                    className="text-sm mt-1"
                     dangerouslySetInnerHTML={{ __html: formatContent(comment.content) }}
                   />
                   
                   <div className="flex items-center gap-4 mt-2 text-muted-foreground">
-                    <button 
-                      className="flex items-center gap-1 text-xs interactive-button hover:text-red-500"
-                      title={t('post.like')}
-                    >
+                    <button className="flex items-center gap-1 text-xs hover:text-red-500">
                       <Heart size={14} />
                       <span>{comment.likes}</span>
                     </button>
                     
-                    <button className="flex items-center gap-1 text-xs interactive-button hover:text-blue-500">
+                    <button className="flex items-center gap-1 text-xs hover:text-blue-500">
                       <ThumbsDown size={14} />
                       <span>{comment.dislikes}</span>
                     </button>
                     
-                    <button 
-                      className="flex items-center gap-1 text-xs interactive-button hover:text-primary"
-                      title={t('post.reply')}
-                    >
+                    <button className="flex items-center gap-1 text-xs hover:text-primary">
                       <Reply size={14} />
+                      <span>{t('post.reply')}</span>
                     </button>
                   </div>
                 </div>
