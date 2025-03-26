@@ -70,8 +70,20 @@ export function usePosts() {
 
   // 与帖子交互 (点赞、点踩、转发)
   const interactWithPostMutation = useMutation({
-    mutationFn: async ({ postId, action }: { postId: string; action: 'like' | 'dislike' | 'forward' }) => {
-      dataStore.interactWithPost(postId, action);
+    mutationFn: async ({ 
+      postId, 
+      action, 
+      emoji 
+    }: { 
+      postId: string; 
+      action: 'like' | 'dislike' | 'forward' | 'react'; 
+      emoji?: '👍' | '❤️' | '😄' | '👀';
+    }) => {
+      if (action === 'react' && emoji) {
+        dataStore.reactToPost(postId, emoji);
+      } else {
+        dataStore.interactWithPost(postId, action as 'like' | 'dislike' | 'forward');
+      }
       return dataStore.getPostById(postId);
     },
     onSuccess: () => {

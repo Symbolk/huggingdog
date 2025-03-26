@@ -4,6 +4,17 @@ import { modelService } from '../api/modelService';
 import { AGENT_COMMENT_PROMPT, AGENT_INTERACTION_DECISION_PROMPT, HUGGINGDOG_POST_PROMPT } from './prompts';
 import { agents as mockAgents } from '../../lib/data';
 
+// 定义表情类型
+export type EmojiReaction = '👍' | '❤️' | '😄' | '👀' | null;
+
+// 更新 AgentInteraction 类型
+export interface AgentInteractionResult {
+  emoji: EmojiReaction;
+  willComment: boolean;
+  willForward: boolean;
+  probability: number;
+}
+
 /**
  * Agent服务
  * 负责Agent的生成、管理和交互
@@ -159,7 +170,7 @@ class AgentService {
     agent: Agent, 
     post: Post, 
     language: 'zh' | 'en' = 'zh'
-  ): Promise<AgentInteraction> {
+  ): Promise<AgentInteractionResult> {
     // 获取Agent的个性
     const personality = this.agentPersonalities.get(agent.id);
     
@@ -170,9 +181,10 @@ class AgentService {
     // 如果帖子是由该Agent发布的，则不与之交互
     if (post.agent.id === agent.id) {
       return {
-        type: 'like',
-        probability: 0,
-        content: ''
+        emoji: null,
+        willComment: false,
+        willForward: false,
+        probability: 0
       };
     }
 
@@ -192,55 +204,54 @@ class AgentService {
         temperature: 0.7
       });
 
-      // 解析JSON响应
-      const result = JSON.parse(response.text) as {
-        like: boolean;
-        dislike: boolean;
-        comment: boolean;
-        forward: boolean;
-      };
+      // 解析响应文本
+      const responseText = response.text.trim();
+      
+      // 提取表情
+      let emoji: EmojiReaction = null;
+      if (responseText.includes('👍')) emoji = '👍';
+      else if (responseText.includes('❤️')) emoji = '❤️';
+      else if (responseText.includes('😄')) emoji = '😄';
+      else if (responseText.includes('👀')) emoji = '👀';
+      
+      // 提取评论和转发意图
+      const willComment = responseText.toLowerCase().includes('评论：是') || 
+                          responseText.toLowerCase().includes('comment: yes');
+      const willForward = responseText.toLowerCase().includes('转发：是') || 
+                          responseText.toLowerCase().includes('forward: yes');
 
       // 随机决定是否进行交互，基于Agent的交互频率
       const willInteract = Math.random() < personality.interactionFrequency;
       
       if (!willInteract) {
         return {
-          type: 'like',
-          probability: 0,
-          content: ''
+          emoji: null,
+          willComment: false,
+          willForward: false,
+          probability: 0
         };
       }
 
-      // 确定交互类型
-      let type: 'like' | 'dislike' | 'comment' | 'forward' = 'like';
+      // 计算交互概率
       let probability = 0;
-
-      if (result.comment) {
-        type = 'comment';
-        probability = 0.8 * personality.interactionFrequency;
-      } else if (result.forward) {
-        type = 'forward';
-        probability = 0.6 * personality.interactionFrequency;
-      } else if (result.like) {
-        type = 'like';
-        probability = 0.9 * personality.interactionFrequency;
-      } else if (result.dislike) {
-        type = 'dislike';
-        probability = 0.3 * personality.interactionFrequency;
-      }
+      if (emoji) probability = 0.9 * personality.interactionFrequency;
+      if (willComment) probability = Math.max(probability, 0.8 * personality.interactionFrequency);
+      if (willForward) probability = Math.max(probability, 0.6 * personality.interactionFrequency);
 
       return {
-        type,
-        probability,
-        content: ''
+        emoji,
+        willComment,
+        willForward,
+        probability
       };
     } catch (error) {
       console.error(`Failed to determine interaction for agent ${agent.id}:`, error);
       // 默认不交互
       return {
-        type: 'like',
-        probability: 0,
-        content: ''
+        emoji: null,
+        willComment: false,
+        willForward: false,
+        probability: 0
       };
     }
   }
@@ -307,6 +318,16 @@ class AgentService {
     language: 'zh' | 'en' = 'zh'
   ): Promise<Post> {
     const updatedPost = { ...post };
+    
+    // 确保帖子有reactions字段
+    if (!updatedPost.reactions) {
+      updatedPost.reactions = {
+        '👍': 0,
+        '❤️': 0,
+        '😄': 0,
+        '👀': 0
+      };
+    }
 
     // 对每个非发帖Agent生成互动
     const otherAgents = this.agents.filter(agent => agent.id !== post.agent.id);
@@ -320,22 +341,28 @@ class AgentService {
         continue;
       }
 
-      switch (interaction.type) {
-        case 'like':
-          updatedPost.likes += 1;
-          break;
-        case 'dislike':
-          updatedPost.dislikes += 1;
-          break;
-        case 'forward':
-          updatedPost.forwards += 1;
-          break;
-        case 'comment':
-          const comment = await this.generateAgentComment(agent, post, language);
-          if (comment) {
-            updatedPost.comments.push(comment);
-          }
-          break;
+      // 添加表情反应
+      if (interaction.emoji && updatedPost.reactions) {
+        updatedPost.reactions[interaction.emoji] += 1;
+      }
+
+      // 处理转发
+      if (interaction.willForward) {
+        updatedPost.forwards += 1;
+      }
+
+      // 处理评论
+      if (interaction.willComment) {
+        let comment = null;
+        try {
+          comment = await this.generateAgentComment(agent, post, language);
+        } catch (error) {
+          console.error(`Error generating comment for agent ${agent.id}:`, error);
+        }
+        
+        if (comment) {
+          updatedPost.comments.push(comment);
+        }
       }
     }
 

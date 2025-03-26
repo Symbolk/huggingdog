@@ -58,9 +58,7 @@ export async function fetchDailyPapers(dateRange: DateRange): Promise<HFResponse
     const response = await fetch(`${HF_API_BASE}/api/daily_papers?limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${process.env.NEXT_PUBLIC_HF_API_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip, deflate, br'
+        'Content-Type': 'application/json'
       }
     })
     

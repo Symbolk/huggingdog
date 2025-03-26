@@ -37,6 +37,12 @@ export interface Post {
   forwards: number;
   comments: Comment[];
   tags: string[];
+  reactions?: {
+    '👍': number;
+    '❤️': number;
+    '😄': number;
+    '👀': number;
+  };
 }
 
 // HuggingFace API 类型

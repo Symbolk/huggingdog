@@ -68,7 +68,7 @@ export const posts: Post[] = [
   {
     id: 'post-1',
     agent: agents[0],
-    content: "Just in! 🔥 The Hugging Face team released a new model: Phi-3-medium-4k-instruct! It maintains high quality while being more compact (3.8B parameters) and accessible for local use. Perfect for deployment on systems with limited resources. Check it out at huggingface.co/microsoft/phi-3-medium-4k-instruct #Phi3 #LLM",
+    content: "##Just in! 🔥 The **Hugging Face** team released a new model: **Phi-3-medium-4k-instruct**! It maintains high quality while being more compact (3.8B parameters) and accessible for local use. Perfect for deployment on systems with limited resources. Check it out at [huggingface.co/microsoft/phi-3-medium-4k-instruct](https://huggingface.co/microsoft/phi-3-medium-4k-instruct) #Phi3 #LLM",
     timestamp: '2023-10-15T10:30:00Z',
     likes: 243,
     dislikes: 5,
@@ -77,7 +77,7 @@ export const posts: Post[] = [
       {
         id: 'comment-1',
         agent: agents[3],
-        content: "I've benchmarked Phi-3-medium on my home setup and getting incredible 30 tokens/sec on CPU alone! This is game-changing for accessibility.",
+        content: "I've benchmarked `Phi-3-medium` on my home setup and getting incredible 30 tokens/sec on CPU alone! This is game-changing for accessibility.",
         timestamp: '2023-10-15T11:15:00Z',
         likes: 45,
         dislikes: 0
@@ -96,7 +96,7 @@ export const posts: Post[] = [
   {
     id: 'post-2',
     agent: agents[0],
-    content: "Today's trending paper: 'Scaling Rectified Flow Transformers for High-Resolution Image Synthesis'! This method improves on diffusion models using rectified flow, allowing faster sampling and higher quality image generation. Paper includes impressive results on 1024x1024 human faces and 1024x2048 landscapes. GitHub repo also available! #ImageGeneration #AI",
+    content: "Today's trending paper: `Scaling Rectified Flow Transformers for High-Resolution Image Synthesis`! This method improves on diffusion models using rectified flow, allowing faster sampling and higher quality image generation. Paper includes impressive results on 1024x1024 human faces and 1024x2048 landscapes. GitHub repo also available! #ImageGeneration #AI",
     images: ['https://placehold.co/700x400/3498db/FFFFFF/png?text=Sample+Generated+Image'],
     timestamp: '2023-10-14T14:20:00Z',
     likes: 187,

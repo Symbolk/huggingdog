@@ -153,6 +153,34 @@ class DataStore {
   }
 
   /**
+   * 对帖子添加表情反应
+   */
+  reactToPost(postId: string, emoji: '👍' | '❤️' | '😄' | '👀'): void {
+    const post = this.getPostById(postId);
+    if (!post) return;
+
+    // 确保帖子有reactions字段
+    if (!post.reactions) {
+      post.reactions = {
+        '👍': 0,
+        '❤️': 0,
+        '😄': 0,
+        '👀': 0
+      };
+    }
+
+    const updatedPost = { 
+      ...post,
+      reactions: {
+        ...post.reactions,
+        [emoji]: (post.reactions[emoji] || 0) + 1
+      }
+    };
+
+    this.updatePost(updatedPost);
+  }
+
+  /**
    * 添加评论到帖子
    */
   addCommentToPost(postId: string, comment: any): void {

@@ -87,28 +87,46 @@ ${agentPersonality}
 你正在查看以下社交媒体帖子：
 "${postContent}"
 
-请决定你会如何与这个帖子互动。根据你的个性和对帖子内容的兴趣程度，给出一个JSON格式的响应，包含以下字段：
-- like: 布尔值，表示你是否会点赞
-- dislike: 布尔值，表示你是否会点踩
-- comment: 布尔值，表示你是否会评论
-- forward: 布尔值，表示你是否会转发
+请决定你会如何与这个帖子互动。根据你的个性和对帖子内容的兴趣程度，为帖子选择一个表情回应。
+可选择的表情有：
+- 👍 (表示赞同或喜欢)
+- ❤️ (表示特别喜欢或热爱)
+- 😄 (表示觉得有趣或开心)
+- 👀 (表示觉得内容很吸引眼球或值得关注)
+- 没有表情 (表示不感兴趣)
 
-只返回JSON对象，不要包含其他解释文本。例如：
-{"like": true, "dislike": false, "comment": true, "forward": false}`
+同时，决定是否要评论或转发：
+- 评论：是/否
+- 转发：是/否
+
+请直接回复你选择的表情（如"👍"）以及是否评论和转发，不需要JSON格式。
+例如：
+👍
+评论：是
+转发：否`
     : `You are an AI assistant with the following personality traits:
 ${agentPersonality}
 
 You are viewing the following social media post:
 "${postContent}"
 
-Please decide how you would interact with this post. Based on your personality and interest in the post content, provide a response in JSON format with the following fields:
-- like: boolean indicating whether you would like the post
-- dislike: boolean indicating whether you would dislike the post
-- comment: boolean indicating whether you would comment on the post
-- forward: boolean indicating whether you would forward the post
+Please decide how you would interact with this post. Based on your personality and interest in the post content, choose an emoji reaction for the post.
+Available emoji reactions:
+- 👍 (indicates agreement or like)
+- ❤️ (indicates strong like or love)
+- 😄 (indicates finding it funny or happy)
+- 👀 (indicates finding it eye-catching or worth attention)
+- No reaction (indicates not interested)
 
-Return only the JSON object without any explanatory text. For example:
-{"like": true, "dislike": false, "comment": true, "forward": false}`;
+Also, decide if you want to comment or forward:
+- Comment: Yes/No
+- Forward: Yes/No
+
+Please respond directly with your chosen emoji (like "👍") and whether you'll comment or forward, no need for JSON format.
+For example:
+👍
+Comment: Yes
+Forward: No`;
 
   return basePrompt;
 }; 

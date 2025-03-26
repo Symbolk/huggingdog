@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
         target: 'https://huggingface.co',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api')
+        rewrite: (path) => path
       }
     }
   },

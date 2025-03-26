@@ -99,6 +99,7 @@ Space名称: ${space.name || '未知Space'}
   async generatePostsFromLatestPapers(limit: number = 3, language: 'zh' | 'en' = 'zh'): Promise<Post[]> {
     try {
       const papers = await huggingFaceService.getLatestPapers(limit);
+      console.log('Papers:', papers);
       
       if (!papers || papers.length === 0) {
         console.warn('No papers found');
@@ -130,6 +131,7 @@ Space名称: ${space.name || '未知Space'}
   async generatePostsFromLatestModels(limit: number = 3, language: 'zh' | 'en' = 'zh'): Promise<Post[]> {
     try {
       const models = await huggingFaceService.getLatestModels(limit);
+      console.log('Models:', models);
       
       if (!models || models.length === 0) {
         console.warn('No models found');
@@ -161,7 +163,8 @@ Space名称: ${space.name || '未知Space'}
   async generatePostsFromLatestDatasets(limit: number = 3, language: 'zh' | 'en' = 'zh'): Promise<Post[]> {
     try {
       const datasets = await huggingFaceService.getLatestDatasets(limit);
-      
+      console.log('Datasets:', datasets);
+
       if (!datasets || datasets.length === 0) {
         console.warn('No datasets found');
         return [];
@@ -192,6 +195,7 @@ Space名称: ${space.name || '未知Space'}
   async generatePostsFromLatestSpaces(limit: number = 3, language: 'zh' | 'en' = 'zh'): Promise<Post[]> {
     try {
       const spaces = await huggingFaceService.getLatestSpaces(limit);
+      console.log('Spaces:', spaces);
       
       if (!spaces || spaces.length === 0) {
         console.warn('No spaces found');
