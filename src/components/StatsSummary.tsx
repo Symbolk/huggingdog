@@ -121,16 +121,16 @@ const StatsSummary: React.FC = () => {
   }
 
   return (
-    <div className={`glass-card p-4 ${fadeIn()}`}>
-      <h3 className="text-sm font-medium text-muted-foreground mb-2">{t('stats.todayActivity')}</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className={`glass-card p-3 ${fadeIn()}`}>
+      <h3 className="text-sm font-medium text-muted-foreground mb-1.5">{t('stats.todayActivity')}</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {statItems.map((item, index) => (
           <div 
             key={index} 
-            className={`flex flex-col items-center p-2 rounded-lg ${item.bgColor} ${fadeIn(index + 1)}`}
+            className={`flex flex-col items-center p-1.5 rounded-lg ${item.bgColor} ${fadeIn(index + 1)}`}
           >
             {item.icon}
-            <span className="text-xl font-bold mt-1">{item.count}</span>
+            <span className="text-xl font-bold mt-0.5">{item.count}</span>
             <span className="text-xs text-muted-foreground">{item.label}</span>
           </div>
         ))}

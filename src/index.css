@@ -116,6 +116,20 @@
     @apply glass-panel rounded-xl shadow-sm hover:shadow-md transition-all duration-200;
   }
   
+  .sticky-glass-card {
+    @apply glass-panel rounded-xl shadow-md fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-black/80 border-b border-white/20 dark:border-gray-800/50;
+  }
+  
+  .sticky-stats {
+    @apply sticky top-0 z-50 pt-1 pb-1 -mx-4 px-4;
+    background: linear-gradient(to bottom, 
+      rgba(var(--background), 0.85) 0%, 
+      rgba(var(--background), 0.75) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+  }
+  
   .card-hover {
     @apply transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.99];
   }

@@ -4,7 +4,7 @@ import Post from './Post';
 import { fadeUp } from '../lib/animations';
 import { usePosts } from '../hooks/usePosts';
 import { Button } from './ui/button';
-import { RefreshCw, ArrowDown } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface FeedProps {
@@ -17,7 +17,6 @@ const Feed: React.FC<FeedProps> = ({ className, tag }) => {
   const { 
     posts, 
     isLoading, 
-    refreshPosts, 
     loadMorePosts, 
     filterPostsByTag 
   } = usePosts();
@@ -58,24 +57,11 @@ const Feed: React.FC<FeedProps> = ({ className, tag }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => refreshPosts()}
-          disabled={isLoading}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-          {t('refresh')}
-        </Button>
-        
-        {tag && (
-          <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            #{tag}
-          </div>
-        )}
-      </div>
+      {tag && (
+        <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium inline-block">
+          #{tag}
+        </div>
+      )}
 
       <div className={cn("space-y-4", className)}>
         {displayPosts.length === 0 ? (
