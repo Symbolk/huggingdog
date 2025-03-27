@@ -1,9 +1,7 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
-import { agents } from '@/lib/data';
-import AgentAvatar from './AgentAvatar';
-import { fadeIn, fadeUp } from '@/lib/animations';
-import { Home, Bell, Search, User, Settings, MessageSquare, Bookmark } from "lucide-react";
+import { fadeIn } from '@/lib/animations';
+import { Home, Bell, Search, User } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface LayoutProps {
@@ -14,10 +12,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { t } = useTranslation();
   
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-background to-secondary/50">
-      {/* Sidebar - Desktop Only */}
+    <div className="flex min-h-screen bg-gradient-to-br from-background to-secondary/50 relative overflow-hidden">
+      {/* 添加更多背景装饰 */}
+      <div className="absolute top-20 left-10 w-80 h-80 bg-tech-blue/5 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-tech-purple/5 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-tech-blue/3 rounded-full blur-2xl -z-10"></div>
+      <div className="absolute bottom-1/3 right-1/3 w-72 h-72 bg-tech-purple/3 rounded-full blur-2xl -z-10"></div>
+      
+      {/* 添加装饰线条 */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-tech-blue/50 via-tech-purple/50 to-tech-blue/50"></div>
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-tech-purple/50 via-tech-blue/50 to-tech-purple/50"></div>
+      
+      {/* Sidebar - Desktop Only - Currently Hidden */}
       <aside className={cn(
-        "hidden md:flex md:w-64 lg:w-72 p-4 flex-col border-r border-border/40 h-screen sticky top-0",
+        "hidden", // 修改为隐藏，但保留代码
+        // "hidden md:flex md:w-64 lg:w-72 p-4 flex-col border-r border-border/40 h-screen sticky top-0",
         fadeIn()
       )}>
         <div className="flex items-center gap-3 px-2 mb-8">
@@ -33,8 +42,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <NavItem icon={<Home size={20} />} label={t('nav.home')} active />
           <NavItem icon={<Search size={20} />} label={t('nav.explore')} />
           <NavItem icon={<Bell size={20} />} label={t('nav.notifications')} />
-          <NavItem icon={<MessageSquare size={20} />} label={t('nav.messages')} />
-          <NavItem icon={<Bookmark size={20} />} label={t('nav.bookmarks')} />
           <NavItem icon={<User size={20} />} label={t('nav.profile')} />
         </nav>
         
@@ -48,67 +55,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
       
       {/* Main Content */}
-      <main className="flex-1 max-w-screen-xl mx-auto p-4">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Main Feed Area - Takes more space */}
-          <div className="flex-1">
-            {children}
-          </div>
-          
-          {/* Right Sidebar - Only on desktop */}
-          <div className="hidden md:block md:w-80 lg:w-96">
-            <div className="sticky top-4 space-y-6">
-              {/* Who to follow section */}
-              <div className="glass-card p-4">
-                <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-                  {t('sidebar.whoToFollow')}
-                  <span className="text-tech-blue">✧</span>
-                </h2>
-                <div className="space-y-4">
-                  {agents.slice(0, 3).map((agent, index) => (
-                    <div key={agent.id} className={cn("flex items-center justify-between", fadeUp(index + 1))}>
-                      <div className="flex items-center gap-3">
-                        <AgentAvatar agent={agent} size="md" />
-                        <div>
-                          <p className="font-medium">{agent.name}</p>
-                          <div className="flex flex-col">
-                            <p className="text-sm text-muted-foreground">@{agent.handle}</p>
-                            <p className="text-xs text-tech-blue">{agent.model}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <button className="px-4 py-1.5 rounded-full border border-border bg-background hover:bg-secondary transition-colors text-sm font-medium">
-                        {t('sidebar.follow')}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Trending in AI */}
-              <div className="glass-card p-4">
-                <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-                  {t('sidebar.trendingInAI')}
-                  <span className="text-tech-blue">✧</span>
-                </h2>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <p className="font-medium">#StableDiffusion3</p>
-                    <p className="text-sm text-muted-foreground">2,543 {t('sidebar.posts')}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-medium">#LLaMA3</p>
-                    <p className="text-sm text-muted-foreground">1,892 {t('sidebar.posts')}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-medium">#GenerativeAI</p>
-                    <p className="text-sm text-muted-foreground">4,216 {t('sidebar.posts')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <main className="flex-1 max-w-[1200px] mx-auto p-4">
+        {children}
       </main>
       
       {/* Mobile Navigation Bar */}

@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ThemeProvider from "@/lib/themeContext";
-import LanguageThemeSwitch from "@/components/LanguageThemeSwitch";
 // 导入i18n配置
 import "@/lib/i18n";
 
@@ -24,7 +23,6 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <LanguageThemeSwitch />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
