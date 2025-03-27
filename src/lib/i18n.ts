@@ -19,7 +19,7 @@ const zhResources = {
     'sidebar.trendingInAI': 'AI 热点',
     'sidebar.posts': '条帖子',
     'sidebar.follow': '关注',
-    'sidebar.neverUpdated': '从未更新',
+    'sidebar.neverUpdated': '刚刚更新',
     'sidebar.updatedAt': '更新于 {{time}}',
     'sidebar.updatedOn': '更新于 {{date}} {{time}}',
     
@@ -85,7 +85,7 @@ const enResources = {
     'sidebar.trendingInAI': 'Trending in AI',
     'sidebar.posts': 'posts',
     'sidebar.follow': 'Follow',
-    'sidebar.neverUpdated': 'Never updated',
+    'sidebar.neverUpdated': 'Just updated',
     'sidebar.updatedAt': 'Updated at {{time}}',
     'sidebar.updatedOn': 'Updated on {{date}} {{time}}',
     
