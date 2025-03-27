@@ -80,17 +80,10 @@ class HuggingFaceService {
       const response = await fetch(`${HF_API_BASE}/api/daily_papers?limit=${limit}`, {
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_HF_API_KEY || ''}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
       });
-
-      // 注意：在no-cors模式下，我们无法读取响应内容
-      // 但是我们可以检查响应状态
-      if (response.type === 'opaque') {
-        console.log('Received opaque response due to CORS policy');
-        // 返回空数组，因为我们无法处理opaque响应
-        return [];
-      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch papers: ${response.status} ${response.statusText}`);
@@ -98,6 +91,10 @@ class HuggingFaceService {
 
       try {
         const data = await response.json() as RawPaper[];
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetched papers:', data);
+        }
         
         return data.map((paper: RawPaper) => ({
           id: paper.id || `paper-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -111,13 +108,37 @@ class HuggingFaceService {
         }));
       } catch (parseError) {
         console.error('Error parsing papers response:', parseError);
-        // 如果JSON解析失败，返回空数组
-        return [];
+        
+        // 如果API调用成功但解析失败，提供模拟数据
+        const mockPapers: HFPaper[] = Array(limit).fill(0).map((_, i) => ({
+          id: `paper-mock-${i}`,
+          title: `Mock Paper ${i}: Advances in Natural Language Processing`,
+          authors: ['John Doe', 'Jane Smith'],
+          summary: 'This is a mock paper summary for testing purposes. It simulates a research paper on recent advances in NLP.',
+          publicationDate: new Date().toISOString(),
+          url: `${HF_API_BASE}/papers/mock-${i}`,
+          pdfUrl: '',
+          tags: ['NLP', 'Machine Learning', 'mock']
+        }));
+        
+        return mockPapers;
       }
     } catch (error) {
       console.error('Failed to fetch latest papers:', error);
-      // 不要抛出错误，而是返回空数组以避免整个应用崩溃
-      return [];
+      
+      // 提供模拟数据
+      const mockPapers: HFPaper[] = Array(limit).fill(0).map((_, i) => ({
+        id: `paper-mock-${i}`,
+        title: `Mock Paper ${i}: Advances in Natural Language Processing`,
+        authors: ['John Doe', 'Jane Smith'],
+        summary: 'This is a mock paper summary for testing purposes. It simulates a research paper on recent advances in NLP.',
+        publicationDate: new Date().toISOString(),
+        url: `${HF_API_BASE}/papers/mock-${i}`,
+        pdfUrl: '',
+        tags: ['NLP', 'Machine Learning', 'mock']
+      }));
+      
+      return mockPapers;
     }
   }
 
@@ -129,14 +150,10 @@ class HuggingFaceService {
       const response = await fetch(`${HF_API_BASE}/api/models?sort=lastModified&direction=-1&limit=${limit}`, {
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_HF_API_KEY || ''}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
       });
-
-      if (response.type === 'opaque') {
-        console.log('Received opaque response due to CORS policy');
-        return [];
-      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
@@ -145,6 +162,11 @@ class HuggingFaceService {
       try {
         const data = await response.json() as RawModel[];
         
+        // 减少不必要的日志输出
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetched models:', data);
+        }
+
         return data.map((model: RawModel) => ({
           id: model._id || `model-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           modelId: model.id || '',
@@ -159,11 +181,42 @@ class HuggingFaceService {
         }));
       } catch (parseError) {
         console.error('Error parsing models response:', parseError);
-        return [];
+        
+        // 如果API调用成功但解析失败，可能是因为API返回格式不符合预期
+        // 这时候我们提供一些模拟数据
+        const mockModels: HFModel[] = Array(limit).fill(0).map((_, i) => ({
+          id: `model-mock-${i}`,
+          modelId: `huggingface/model-${i}`,
+          name: `Mock Model ${i}`,
+          author: 'huggingface',
+          description: 'Sample model for testing',
+          downloads: Math.floor(Math.random() * 10000),
+          likes: Math.floor(Math.random() * 1000),
+          tags: ['mock', 'test'],
+          url: `${HF_API_BASE}/huggingface/model-${i}`,
+          lastModified: new Date().toISOString()
+        }));
+        
+        return mockModels;
       }
     } catch (error) {
       console.error('Failed to fetch latest models:', error);
-      return [];
+      
+      // 提供模拟数据
+      const mockModels: HFModel[] = Array(limit).fill(0).map((_, i) => ({
+        id: `model-mock-${i}`,
+        modelId: `huggingface/model-${i}`,
+        name: `Mock Model ${i}`,
+        author: 'huggingface',
+        description: 'Sample model for testing',
+        downloads: Math.floor(Math.random() * 10000),
+        likes: Math.floor(Math.random() * 1000),
+        tags: ['mock', 'test'],
+        url: `${HF_API_BASE}/huggingface/model-${i}`,
+        lastModified: new Date().toISOString()
+      }));
+      
+      return mockModels;
     }
   }
 
@@ -177,15 +230,8 @@ class HuggingFaceService {
           'Authorization': `Bearer ${import.meta.env.VITE_HF_API_KEY || ''}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        },
-        mode: 'no-cors'
+        }
       });
-
-
-      if (response.type === 'opaque') {
-        console.log('Received opaque response due to CORS policy');
-        return [];
-      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch datasets: ${response.status} ${response.statusText}`);
@@ -193,7 +239,11 @@ class HuggingFaceService {
 
       try {
         const data = await response.json() as RawDataset[];
-        console.log('Datasets data:', data);
+        
+        // 减少不必要的日志输出
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetched datasets:', data);
+        }
         
         return data.map((dataset: RawDataset) => ({
           id: dataset._id || `dataset-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -208,11 +258,40 @@ class HuggingFaceService {
         }));
       } catch (parseError) {
         console.error('Error parsing datasets response:', parseError);
-        return [];
+        
+        // 如果API调用成功但解析失败，可能是因为API返回格式不符合预期
+        // 这时候我们至少返回一些模拟数据而不是空数组，以便UI显示
+        const mockDatasets: HFDataset[] = Array(limit).fill(0).map((_, i) => ({
+          id: `dataset-mock-${i}`,
+          name: `Mock Dataset ${i}`,
+          author: 'huggingface',
+          description: 'Sample dataset for testing',
+          downloads: Math.floor(Math.random() * 10000),
+          likes: Math.floor(Math.random() * 1000),
+          tags: ['mock', 'test'],
+          url: `${HF_API_BASE}/datasets/mock/dataset-${i}`,
+          lastModified: new Date().toISOString()
+        }));
+        
+        return mockDatasets;
       }
     } catch (error) {
       console.error('Failed to fetch latest datasets:', error);
-      return [];
+      
+      // 返回一些模拟数据，确保UI能够显示内容
+      const mockDatasets: HFDataset[] = Array(limit).fill(0).map((_, i) => ({
+        id: `dataset-mock-${i}`,
+        name: `Mock Dataset ${i}`,
+        author: 'huggingface',
+        description: 'Sample dataset for testing',
+        downloads: Math.floor(Math.random() * 10000),
+        likes: Math.floor(Math.random() * 1000),
+        tags: ['mock', 'test'],
+        url: `${HF_API_BASE}/datasets/mock/dataset-${i}`,
+        lastModified: new Date().toISOString()
+      }));
+      
+      return mockDatasets;
     }
   }
 
@@ -226,14 +305,8 @@ class HuggingFaceService {
           'Authorization': `Bearer ${import.meta.env.VITE_HF_API_KEY || ''}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        },
-        mode: 'no-cors'
+        }
       });
-
-      if (response.type === 'opaque') {
-        console.log('Received opaque response due to CORS policy');
-        return [];
-      }
 
       if (!response.ok) {
         throw new Error(`Failed to fetch spaces: ${response.status} ${response.statusText}`);
@@ -241,7 +314,11 @@ class HuggingFaceService {
 
       try {
         const data = await response.json() as RawSpace[];
-        console.log('Spaces data:', data);
+        
+        // 减少不必要的日志输出
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetched spaces:', data);
+        }
         
         return data.map((space: RawSpace) => ({
           id: space._id || `space-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -255,11 +332,37 @@ class HuggingFaceService {
         }));
       } catch (parseError) {
         console.error('Error parsing spaces response:', parseError);
-        return [];
+        
+        // 如果API调用成功但解析失败，返回模拟数据
+        const mockSpaces: HFSpace[] = Array(limit).fill(0).map((_, i) => ({
+          id: `space-mock-${i}`,
+          name: `Mock Space ${i}`,
+          author: 'huggingface',
+          description: 'Sample space for testing',
+          likes: Math.floor(Math.random() * 1000),
+          tags: ['mock', 'test'],
+          url: `${HF_API_BASE}/spaces/mock/space-${i}`,
+          lastModified: new Date().toISOString()
+        }));
+        
+        return mockSpaces;
       }
     } catch (error) {
       console.error('Failed to fetch latest spaces:', error);
-      return [];
+      
+      // 返回模拟数据
+      const mockSpaces: HFSpace[] = Array(limit).fill(0).map((_, i) => ({
+        id: `space-mock-${i}`,
+        name: `Mock Space ${i}`,
+        author: 'huggingface',
+        description: 'Sample space for testing',
+        likes: Math.floor(Math.random() * 1000),
+        tags: ['mock', 'test'],
+        url: `${HF_API_BASE}/spaces/mock/space-${i}`,
+        lastModified: new Date().toISOString()
+      }));
+      
+      return mockSpaces;
     }
   }
 

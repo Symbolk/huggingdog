@@ -76,7 +76,7 @@ const Index: React.FC = () => {
       </div>
       
       {/* 添加空间以避免内容重叠，减小间距 */}
-      <div style={{ height: `20px` }} className="w-full"></div>
+      <div style={{ height: `16px` }} className="w-full"></div>
       
       <div className="relative">
         <div className="absolute -top-10 -left-20 w-64 h-64 bg-tech-purple/10 rounded-full blur-3xl -z-10"></div>
