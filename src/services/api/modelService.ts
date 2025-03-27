@@ -74,6 +74,73 @@ export const MODEL_API_CONFIG: Record<string, ModelConfig> = {
   }
 };
 
+// 声明TextGenerationOptions接口
+interface TextGenerationOptions {
+  temperature?: number;
+  maxTokens?: number;
+  onToken?: (token: string) => void;
+}
+
+// 声明TextGenerationResponse接口
+interface TextGenerationResponse {
+  text: string;
+  isComplete?: boolean;
+}
+
+// 定义ModelService类
+class ModelService {
+  // 生成文本方法
+  async generateText(
+    model: string,
+    prompt: string,
+    options: TextGenerationOptions = {}
+  ): Promise<TextGenerationResponse> {
+    // 这里是一个占位实现，实际项目中需要根据不同模型进行调用
+    console.log(`Generating text with model: ${model}, prompt: ${prompt}`);
+    
+    // 模拟API调用延迟
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return {
+      text: `This is a simulated response from ${model} model.`,
+      isComplete: true
+    };
+  }
+  
+  // 流式生成文本方法
+  async *streamText(
+    model: string,
+    prompt: string,
+    options: TextGenerationOptions = {}
+  ): AsyncGenerator<TextGenerationResponse> {
+    // 模拟流式生成
+    console.log(`Streaming text with model: ${model}, prompt: ${prompt}`);
+    
+    const words = ["Hello", "world", "this", "is", "a", "simulated", "streaming", "response", "from", model, "model"];
+    
+    for (let i = 0; i < words.length; i++) {
+      // 模拟流式响应延迟
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const isComplete = i === words.length - 1;
+      const text = words.slice(0, i + 1).join(" ");
+      
+      // 如果有token回调，调用它
+      if (options.onToken) {
+        options.onToken(words[i]);
+      }
+      
+      yield {
+        text,
+        isComplete
+      };
+    }
+  }
+}
+
+// 导出modelService实例
+export const modelService = new ModelService();
+
 // 添加环境变量声明
 declare global {
   interface ImportMetaEnv {
