@@ -1,12 +1,454 @@
 import { huggingFaceService } from '../api/huggingfaceService';
 import { agentService } from '../agents/agentService';
-import { HFDataset, HFModel, HFPaper, HFSpace, Post, StreamingPost, StreamingComment, GenerationStatus } from '../../lib/types';
+import { HFDataset, HFModel, HFPaper, HFSpace, Post, StreamingPost, StreamingComment, GenerationStatus, TrendingAnalysis } from '../../lib/types';
+
+// 用于存储过滤后的内容和剩余内容的接口
+interface FilteredContent {
+  filteredContent: (HFPaper | HFModel | HFDataset | HFSpace)[];
+  remainingContent: (HFPaper | HFModel | HFDataset | HFSpace)[];
+}
+
+// 流式生成回调接口
+interface StreamingCallbacks {
+  onPostStart?: (post: StreamingPost) => void;
+  onPostUpdate?: (post: StreamingPost) => void;
+  onCommentStart?: (postId: string, comment: StreamingComment) => void;
+  onCommentUpdate?: (postId: string, comment: StreamingComment) => void;
+}
 
 /**
  * 帖子生成器服务
  * 负责从HuggingFace获取内容并生成帖子
  */
 class PostGenerator {
+  /**
+   * 根据热点分析结果过滤内容
+   * @param trends 热点分析结果
+   * @param limit 需要的内容数量
+   * @param language 语言
+   * @returns 过滤后的内容和剩余内容
+   */
+  async getFilteredContentByTrends(
+    trends: TrendingAnalysis, 
+    limit: number = 10,
+    language: 'zh' | 'en' = 'zh'
+  ): Promise<FilteredContent> {
+    try {
+      // 获取所有可用的内容（多获取一些，以便有更多选择空间）
+      const paperLimit = Math.max(5, Math.ceil(limit / 2));
+      const modelLimit = Math.max(5, Math.ceil(limit / 2));
+      const datasetLimit = Math.max(5, Math.ceil(limit / 2));
+      const spaceLimit = Math.max(5, Math.ceil(limit / 2));
+      
+      // 并行获取所有内容
+      const [papers, models, datasets, spaces] = await Promise.all([
+        huggingFaceService.getLatestPapers(paperLimit * 2),
+        huggingFaceService.getLatestModels(modelLimit * 2),
+        huggingFaceService.getLatestDatasets(datasetLimit * 2),
+        huggingFaceService.getLatestSpaces(spaceLimit * 2)
+      ]);
+
+      // 提取热榜关键词
+      const trendKeywords = this.extractTrendKeywords(trends);
+      
+      // 过滤与热榜相关的内容
+      const relevantPapers = this.filterContentByRelevance(papers, trendKeywords);
+      const relevantModels = this.filterContentByRelevance(models, trendKeywords);
+      const relevantDatasets = this.filterContentByRelevance(datasets, trendKeywords);
+      const relevantSpaces = this.filterContentByRelevance(spaces, trendKeywords);
+      
+      // 剩余未过滤的内容
+      const remainingPapers = papers.filter(p => !relevantPapers.includes(p));
+      const remainingModels = models.filter(m => !relevantModels.includes(m));
+      const remainingDatasets = datasets.filter(d => !relevantDatasets.includes(d));
+      const remainingSpaces = spaces.filter(s => !relevantSpaces.includes(s));
+      
+      // 组合所有过滤后的内容，保持多样性（各类型内容均有）
+      const allFilteredContent = this.balanceContentTypes(
+        relevantPapers, 
+        relevantModels, 
+        relevantDatasets, 
+        relevantSpaces, 
+        limit
+      );
+      
+      // 组合所有剩余内容，保持多样性
+      const allRemainingContent = this.balanceContentTypes(
+        remainingPapers,
+        remainingModels,
+        remainingDatasets,
+        remainingSpaces,
+        limit * 2 // 保留更多剩余内容以备后用
+      );
+      
+      return {
+        filteredContent: allFilteredContent,
+        remainingContent: allRemainingContent
+      };
+    } catch (error) {
+      console.error('Error filtering content by trends:', error);
+      // 发生错误时，返回空的过滤结果
+      return {
+        filteredContent: [],
+        remainingContent: []
+      };
+    }
+  }
+  
+  /**
+   * 从已经过滤的内容生成混合帖子
+   * @param content 已过滤的内容数组
+   * @param callbacks 流式生成回调
+   * @param language 语言
+   */
+  async generateMixedPostsFromContentStreaming(
+    content: (HFPaper | HFModel | HFDataset | HFSpace)[],
+    callbacks: StreamingCallbacks = {},
+    language: 'zh' | 'en' = 'zh'
+  ): Promise<void> {
+    try {
+      if (!content || content.length === 0) {
+        console.warn('No content provided to generate posts from');
+        return;
+      }
+      
+      // 遍历内容生成帖子
+      for (const item of content) {
+        try {
+          let post: Post;
+          
+          // 根据内容类型调用相应的生成方法
+          if ('summary' in item) {
+            // 这是论文
+            post = await this.generatePostFromPaper(item as HFPaper, language);
+          } else if ('modelId' in item) {
+            // 这是模型
+            post = await this.generatePostFromModel(item as HFModel, language);
+          } else if ('name' in item && !('modelId' in item)) {
+            // 这是数据集
+            post = await this.generatePostFromDataset(item as HFDataset, language);
+          } else {
+            // 这是Space
+            post = await this.generatePostFromSpace(item as HFSpace, language);
+          }
+          
+          // 创建流式生成帖子对象
+          const streamingPost: StreamingPost = {
+            ...post,
+            content: '',
+            generationStatus: GenerationStatus.PENDING
+          };
+          
+          // 触发开始生成回调
+          if (callbacks.onPostStart) {
+            callbacks.onPostStart(streamingPost);
+          }
+          
+          // 模拟流式生成帖子内容
+          const content = post.content;
+          let currentContent = '';
+          
+          // 按字符逐步生成内容
+          for (let i = 0; i < content.length; i++) {
+            currentContent += content[i];
+            
+            // 每5个字符更新一次
+            if (i % 5 === 0 || i === content.length - 1) {
+              const updatedPost: StreamingPost = {
+                ...streamingPost,
+                content: currentContent,
+                generationStatus: i === content.length - 1 
+                  ? GenerationStatus.COMPLETE 
+                  : GenerationStatus.STREAMING
+              };
+              
+              // 触发更新回调
+              if (callbacks.onPostUpdate) {
+                callbacks.onPostUpdate(updatedPost);
+              }
+              
+              // 添加适当的延迟使生成效果更自然
+              await new Promise(resolve => setTimeout(resolve, 20));
+            }
+          }
+          
+          // 为生成的帖子添加评论和互动
+          await this.generateInteractionsForPostStreaming(
+            post.id,
+            post.agent.id,
+            callbacks,
+            language
+          );
+          
+          // 在帖子之间添加一些延迟，避免同时生成太多帖子
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error('Error generating post from content item:', error);
+          // 继续处理下一个内容项
+          continue;
+        }
+      }
+    } catch (error) {
+      console.error('Error generating mixed posts from content:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 为帖子生成流式互动（评论等）
+   */
+  private async generateInteractionsForPostStreaming(
+    postId: string,
+    postAuthorId: string,
+    callbacks: StreamingCallbacks,
+    language: 'zh' | 'en'
+  ): Promise<void> {
+    try {
+      // 获取除帖子作者外的所有Agent
+      const agents = agentService.getAgents()
+        .filter(agent => agent.id !== postAuthorId);
+      
+      // 随机选择1-3个Agent进行评论
+      const commentCount = Math.floor(Math.random() * 3) + 1;
+      const selectedAgents = agents
+        .sort(() => Math.random() - 0.5)
+        .slice(0, commentCount);
+      
+      // 为每个Agent生成评论
+      for (const agent of selectedAgents) {
+        try {
+          // 生成评论
+          const comment = await agentService.generateAgentComment(agent, postId, language);
+          
+          // 创建流式评论对象
+          const streamingComment: StreamingComment = {
+            ...comment,
+            content: '',
+            generationStatus: GenerationStatus.PENDING
+          };
+          
+          // 触发评论开始生成回调
+          if (callbacks.onCommentStart) {
+            callbacks.onCommentStart(postId, streamingComment);
+          }
+          
+          // 模拟流式生成评论内容
+          const content = comment.content;
+          let currentContent = '';
+          
+          // 按字符逐步生成内容
+          for (let i = 0; i < content.length; i++) {
+            currentContent += content[i];
+            
+            // 每3个字符更新一次
+            if (i % 3 === 0 || i === content.length - 1) {
+              const updatedComment: StreamingComment = {
+                ...streamingComment,
+                content: currentContent,
+                generationStatus: i === content.length - 1 
+                  ? GenerationStatus.COMPLETE 
+                  : GenerationStatus.STREAMING
+              };
+              
+              // 触发更新回调
+              if (callbacks.onCommentUpdate) {
+                callbacks.onCommentUpdate(postId, updatedComment);
+              }
+              
+              // 添加适当的延迟使生成效果更自然
+              await new Promise(resolve => setTimeout(resolve, 15));
+            }
+          }
+          
+          // 在评论之间添加一些延迟
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(`Error generating comment for agent ${agent.id}:`, error);
+          // 继续处理下一个Agent
+          continue;
+        }
+      }
+    } catch (error) {
+      console.error('Error generating interactions for post:', error);
+    }
+  }
+  
+  /**
+   * 从热榜提取关键词
+   */
+  private extractTrendKeywords(trends: TrendingAnalysis): string[] {
+    const keywords: string[] = [];
+    
+    // 从热点话题名称中提取关键词
+    trends.topics.forEach(topic => {
+      keywords.push(topic.name);
+      
+      // 添加相关标签
+      if (topic.relatedTags && topic.relatedTags.length > 0) {
+        keywords.push(...topic.relatedTags);
+      }
+    });
+    
+    // 去重
+    return [...new Set(keywords)];
+  }
+  
+  /**
+   * 根据相关性过滤内容
+   */
+  private filterContentByRelevance<T extends HFPaper | HFModel | HFDataset | HFSpace>(
+    items: T[],
+    keywords: string[]
+  ): T[] {
+    return items.filter(item => {
+      // 检查标题/名称
+      const title = this.getItemTitle(item);
+      if (this.containsAnyKeyword(title, keywords)) {
+        return true;
+      }
+      
+      // 检查描述
+      const description = this.getItemDescription(item);
+      if (this.containsAnyKeyword(description, keywords)) {
+        return true;
+      }
+      
+      // 检查标签
+      const tags = this.getItemTags(item);
+      if (tags.some(tag => keywords.some(kw => tag.toLowerCase().includes(kw.toLowerCase())))) {
+        return true;
+      }
+      
+      return false;
+    });
+  }
+  
+  /**
+   * 获取项目的标题
+   */
+  private getItemTitle(item: HFPaper | HFModel | HFDataset | HFSpace): string {
+    if ('title' in item) {
+      return item.title;
+    } else if ('name' in item) {
+      return item.name;
+    } else {
+      return '';
+    }
+  }
+  
+  /**
+   * 获取项目的描述
+   */
+  private getItemDescription(item: HFPaper | HFModel | HFDataset | HFSpace): string {
+    if ('summary' in item) {
+      return item.summary;
+    } else if ('description' in item) {
+      return item.description;
+    } else {
+      return '';
+    }
+  }
+  
+  /**
+   * 获取项目的标签
+   */
+  private getItemTags(item: HFPaper | HFModel | HFDataset | HFSpace): string[] {
+    if ('tags' in item && Array.isArray(item.tags)) {
+      return item.tags;
+    }
+    return [];
+  }
+  
+  /**
+   * 检查文本是否包含任何关键词
+   */
+  private containsAnyKeyword(text: string, keywords: string[]): boolean {
+    if (!text) return false;
+    const normalizedText = text.toLowerCase();
+    return keywords.some(keyword => 
+      normalizedText.includes(keyword.toLowerCase())
+    );
+  }
+  
+  /**
+   * 平衡不同类型的内容，保持多样性
+   */
+  private balanceContentTypes(
+    papers: HFPaper[],
+    models: HFModel[],
+    datasets: HFDataset[],
+    spaces: HFSpace[],
+    limit: number
+  ): (HFPaper | HFModel | HFDataset | HFSpace)[] {
+    // 计算每种类型应该选择的数量
+    const total = papers.length + models.length + datasets.length + spaces.length;
+    if (total === 0) return [];
+    if (total <= limit) {
+      // 如果总数小于限制，直接返回所有内容
+      return [...papers, ...models, ...datasets, ...spaces];
+    }
+    
+    // 计算每种类型的比例
+    const paperRatio = papers.length / total;
+    const modelRatio = models.length / total;
+    const datasetRatio = datasets.length / total;
+    const spaceRatio = spaces.length / total;
+    
+    // 根据比例分配数量
+    let paperCount = Math.round(limit * paperRatio);
+    let modelCount = Math.round(limit * modelRatio);
+    let datasetCount = Math.round(limit * datasetRatio);
+    let spaceCount = Math.round(limit * spaceRatio);
+    
+    // 调整数量，确保总和等于limit
+    const totalCount = paperCount + modelCount + datasetCount + spaceCount;
+    const diff = limit - totalCount;
+    
+    if (diff !== 0) {
+      // 简单调整：将差值分配给数量最多的类型
+      const maxType = Math.max(paperRatio, modelRatio, datasetRatio, spaceRatio);
+      if (maxType === paperRatio) paperCount += diff;
+      else if (maxType === modelRatio) modelCount += diff;
+      else if (maxType === datasetRatio) datasetCount += diff;
+      else spaceCount += diff;
+    }
+    
+    // 确保所有数量都是非负的，并且不超过可用的数量
+    paperCount = Math.max(0, Math.min(paperCount, papers.length));
+    modelCount = Math.max(0, Math.min(modelCount, models.length));
+    datasetCount = Math.max(0, Math.min(datasetCount, datasets.length));
+    spaceCount = Math.max(0, Math.min(spaceCount, spaces.length));
+    
+    // 选择各类型内容
+    const selectedPapers = papers.slice(0, paperCount);
+    const selectedModels = models.slice(0, modelCount);
+    const selectedDatasets = datasets.slice(0, datasetCount);
+    const selectedSpaces = spaces.slice(0, spaceCount);
+    
+    // 合并所有选择的内容
+    const result = [...selectedPapers, ...selectedModels, ...selectedDatasets, ...selectedSpaces];
+    
+    // 如果结果数量小于limit，尝试从其他类型添加更多内容
+    if (result.length < limit) {
+      const remaining = [
+        ...papers.slice(paperCount),
+        ...models.slice(modelCount),
+        ...datasets.slice(datasetCount),
+        ...spaces.slice(spaceCount)
+      ];
+      
+      // 随机排序剩余内容，并添加足够的内容以达到limit
+      const extraNeeded = limit - result.length;
+      const extraItems = remaining
+        .sort(() => Math.random() - 0.5)
+        .slice(0, extraNeeded);
+      
+      return [...result, ...extraItems];
+    }
+    
+    return result;
+  }
+
   /**
    * 从论文生成帖子
    */
@@ -21,6 +463,7 @@ class PostGenerator {
 链接: ${paper.url || '#'}
 `;
 
+      // 生成帖子，而不是直接返回字符串
       return await agentService.generateHuggingdogPost(contentTemplate, language);
     } catch (error) {
       console.error('Error generating post from paper:', error);

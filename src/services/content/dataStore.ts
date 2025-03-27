@@ -1,5 +1,6 @@
-import { Post, Comment, GenerationStatus, StreamingPost, StreamingComment } from '../../lib/types';
+import { Post, Comment, GenerationStatus, StreamingPost, StreamingComment, TrendingAnalysis } from '../../lib/types';
 import { postGenerator } from './postGenerator';
+import { HFPaper, HFModel, HFDataset, HFSpace } from '../../lib/types';
 // 不再导入 mock 数据
 // import { posts as mockPosts } from '../../lib/data';
 
@@ -13,6 +14,9 @@ class DataStore {
   private streamingComments: Map<string, StreamingComment> = new Map(); // 存储正在生成中的评论
   private isLoading: boolean = false;
   private listeners: Set<() => void> = new Set();
+  private remainingContent: (HFPaper | HFModel | HFDataset | HFSpace)[] = []; // 存储未被优先选择的内容
+  private currentTrends: TrendingAnalysis | null = null; // 存储当前热榜
+  private readonly MAX_POSTS = 10; // 最大帖子数量限制
 
   constructor() {
     // 初始化时不加载 mock 数据，等待 API 调用
@@ -95,7 +99,12 @@ class DataStore {
    * 添加新帖子
    */
   addPost(post: Post): void {
+    // 将新帖子添加到开头
     this.posts.unshift(post);
+    
+    // 检查并限制帖子总数
+    this.enforcePostLimit();
+    
     this.notifyListeners();
   }
 
@@ -104,7 +113,21 @@ class DataStore {
    */
   addPosts(newPosts: Post[]): void {
     this.posts = [...newPosts, ...this.posts];
+    
+    // 检查并限制帖子总数
+    this.enforcePostLimit();
+    
     this.notifyListeners();
+  }
+
+  /**
+   * 限制帖子数量，确保不超过最大限制
+   */
+  private enforcePostLimit(): void {
+    // 如果帖子数量超过限制，删除多余的帖子
+    if (this.posts.length > this.MAX_POSTS) {
+      this.posts = this.posts.slice(0, this.MAX_POSTS);
+    }
   }
 
   /**
@@ -148,15 +171,85 @@ class DataStore {
   }
 
   /**
+   * 根据热榜加载最新内容
+   * 优先选择与热榜话题相关的内容生成帖子
+   */
+  async loadLatestContentByTrends(trends: TrendingAnalysis, limit: number = 10, language: 'zh' | 'en' = 'zh'): Promise<void> {
+    try {
+      // 如果已经在生成中，不重复触发
+      if (this.isLoading || this.streamingPosts.size > 0) {
+        console.log('Content generation already in progress, skipping request');
+        return;
+      }
+      
+      // 清空现有帖子，以便显示新的内容
+      this.clearPosts();
+      
+      this.isLoading = true;
+      this.notifyListeners();
+      
+      // 保存当前热榜，用于后续过滤
+      this.currentTrends = trends;
+
+      // 从postGenerator获取所有内容
+      const { filteredContent, remainingContent } = await postGenerator.getFilteredContentByTrends(
+        trends,
+        limit,
+        language
+      );
+      
+      // 保存未被选中的内容，供后续加载更多使用
+      this.remainingContent = remainingContent;
+
+      // 使用流式生成方法
+      await postGenerator.generateMixedPostsFromContentStreaming(filteredContent.slice(0, this.MAX_POSTS), {
+        onPostStart: (streamingPost) => {
+          // 当帖子开始生成时添加到流式帖子列表
+          this.updateStreamingPost(streamingPost);
+        },
+        onPostUpdate: (streamingPost) => {
+          // 当帖子内容更新时更新流式帖子
+          this.updateStreamingPost(streamingPost);
+        },
+        onCommentStart: (postId, streamingComment) => {
+          // 当评论开始生成时添加到流式评论列表
+          this.updateStreamingComment(postId, streamingComment);
+        },
+        onCommentUpdate: (postId, streamingComment) => {
+          // 当评论内容更新时更新流式评论
+          this.updateStreamingComment(postId, streamingComment);
+        }
+      }, language);
+      
+    } catch (error) {
+      console.error('Failed to load latest content by trends:', error);
+      // 如果基于热榜加载失败，回退到常规加载
+      this.loadLatestContent(limit, language);
+    } finally {
+      this.isLoading = false;
+      this.notifyListeners();
+    }
+  }
+
+  /**
    * 加载最新内容
    */
   async loadLatestContent(limit: number = 10, language: 'zh' | 'en' = 'zh'): Promise<void> {
     try {
+      // 如果已经在生成中，不重复触发
+      if (this.isLoading || this.streamingPosts.size > 0) {
+        console.log('Content generation already in progress, skipping request');
+        return;
+      }
+      
+      // 清空现有帖子，以便显示新的内容
+      this.clearPosts();
+      
       this.isLoading = true;
       this.notifyListeners();
 
       // 使用流式生成方法替代之前的批量生成
-      await postGenerator.generateMixedLatestPostsStreaming(limit, language, {
+      await postGenerator.generateMixedLatestPostsStreaming(Math.min(limit, this.MAX_POSTS), language, {
         onPostStart: (streamingPost) => {
           // 当帖子开始生成时添加到流式帖子列表
           this.updateStreamingPost(streamingPost);
@@ -184,32 +277,58 @@ class DataStore {
   }
 
   /**
-   * 加载更多内容
+   * 加载更多内容（使用剩余内容）
    */
   async loadMoreContent(limit: number = 5, language: 'zh' | 'en' = 'zh'): Promise<void> {
     try {
+      // 如果已经在生成中，不重复触发
+      if (this.isLoading || this.streamingPosts.size > 0) {
+        console.log('Content generation already in progress, skipping request');
+        return;
+      }
+      
       this.isLoading = true;
       this.notifyListeners();
 
-      // 使用流式生成方法替代之前的批量生成
-      await postGenerator.generateMixedLatestPostsStreaming(limit, language, {
-        onPostStart: (streamingPost) => {
-          // 当帖子开始生成时添加到流式帖子列表
-          this.updateStreamingPost(streamingPost);
-        },
-        onPostUpdate: (streamingPost) => {
-          // 当帖子内容更新时更新流式帖子
-          this.updateStreamingPost(streamingPost);
-        },
-        onCommentStart: (postId, streamingComment) => {
-          // 当评论开始生成时添加到流式评论列表
-          this.updateStreamingComment(postId, streamingComment);
-        },
-        onCommentUpdate: (postId, streamingComment) => {
-          // 当评论内容更新时更新流式评论
-          this.updateStreamingComment(postId, streamingComment);
-        }
-      });
+      // 如果有剩余内容且有当前热榜，优先使用剩余内容
+      if (this.remainingContent.length > 0 && this.currentTrends) {
+        // 从剩余内容中选择指定数量
+        const contentToUse = this.remainingContent.slice(0, Math.min(limit, 5));
+        // 更新剩余内容
+        this.remainingContent = this.remainingContent.slice(Math.min(limit, 5));
+        
+        // 从内容生成帖子
+        await postGenerator.generateMixedPostsFromContentStreaming(contentToUse, {
+          onPostStart: (streamingPost) => {
+            this.updateStreamingPost(streamingPost);
+          },
+          onPostUpdate: (streamingPost) => {
+            this.updateStreamingPost(streamingPost);
+          },
+          onCommentStart: (postId, streamingComment) => {
+            this.updateStreamingComment(postId, streamingComment);
+          },
+          onCommentUpdate: (postId, streamingComment) => {
+            this.updateStreamingComment(postId, streamingComment);
+          }
+        }, language);
+      } else {
+        // 如果没有剩余内容，使用常规方法获取更多
+        await postGenerator.generateMixedLatestPostsStreaming(Math.min(limit, 5), language, {
+          onPostStart: (streamingPost) => {
+            this.updateStreamingPost(streamingPost);
+          },
+          onPostUpdate: (streamingPost) => {
+            this.updateStreamingPost(streamingPost);
+          },
+          onCommentStart: (postId, streamingComment) => {
+            this.updateStreamingComment(postId, streamingComment);
+          },
+          onCommentUpdate: (postId, streamingComment) => {
+            this.updateStreamingComment(postId, streamingComment);
+          }
+        });
+      }
       
     } catch (error) {
       console.error('Failed to load more content:', error);
@@ -250,29 +369,19 @@ class DataStore {
     const post = this.getPostById(postId);
     if (!post) return;
 
-    // 确保帖子有reactions字段
-    if (!post.reactions) {
-      post.reactions = {
-        '👍': 0,
-        '❤️': 0,
-        '😄': 0,
-        '👀': 0
-      };
+    const updatedPost = { ...post };
+    
+    if (!updatedPost.reactions) {
+      updatedPost.reactions = { '👍': 0, '❤️': 0, '😄': 0, '👀': 0 };
     }
-
-    const updatedPost = { 
-      ...post,
-      reactions: {
-        ...post.reactions,
-        [emoji]: (post.reactions[emoji] || 0) + 1
-      }
-    };
-
+    
+    updatedPost.reactions[emoji] += 1;
+    
     this.updatePost(updatedPost);
   }
 
   /**
-   * 添加评论到帖子
+   * 向帖子添加评论
    */
   addCommentToPost(postId: string, comment: Comment): void {
     const post = this.getPostById(postId);
@@ -282,8 +391,18 @@ class DataStore {
       ...post,
       comments: [...post.comments, comment]
     };
-
+    
     this.updatePost(updatedPost);
+  }
+
+  /**
+   * 清空所有帖子（仅用于测试）
+   */
+  clearPosts(): void {
+    this.posts = [];
+    this.streamingPosts.clear();
+    this.streamingComments.clear();
+    this.notifyListeners();
   }
 }
 

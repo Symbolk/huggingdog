@@ -153,3 +153,19 @@ export interface AgentPersonality {
   opinionated: number; // 0-1，表示多有主见
   responseStyle: 'formal' | 'casual' | 'technical' | 'enthusiastic';
 }
+
+// AI热点榜相关类型
+export interface TrendingTopic {
+  id: string;
+  name: string;
+  count: number;
+  description?: string;
+  relatedTags?: string[];
+  popularity: number; // 0-100之间的热度值
+}
+
+export interface TrendingAnalysis {
+  timestamp: string;
+  topics: TrendingTopic[];
+  summary?: string;
+}

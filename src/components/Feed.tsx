@@ -89,7 +89,7 @@ const Feed: React.FC<FeedProps> = ({ className, tag }) => {
             className="flex items-center gap-1"
           >
             <ArrowDown className="h-4 w-4" />
-            {t('loadMore')}
+            {t('actions.loadMore')}
           </Button>
         </div>
       )}

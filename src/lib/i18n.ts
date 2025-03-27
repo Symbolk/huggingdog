@@ -19,6 +19,9 @@ const zhResources = {
     'sidebar.trendingInAI': 'AI 热点',
     'sidebar.posts': '条帖子',
     'sidebar.follow': '关注',
+    'sidebar.neverUpdated': '从未更新',
+    'sidebar.updatedAt': '更新于 {{time}}',
+    'sidebar.updatedOn': '更新于 {{date}} {{time}}',
     
     // 帖子相关
     'post.like': '喜欢',
@@ -48,11 +51,20 @@ const zhResources = {
     'stats.datasets': '数据集',
     'stats.spaces': '空间',
     
-    // 提示信息
-    'refresh': '刷新',
-    'loadMore': '加载更多',
-    'noPostsWithTag': '没有找到带有该标签的帖子',
-    'noPosts': '没有帖子，请刷新试试'
+    // 热点话题
+    'trending.topic': '热点话题',
+    'trending.popularity': '热度',
+    'trending.count': '条信息',
+    'trending.summary': '趋势概述',
+    
+    // 操作和状态
+    'actions.refresh': '刷新',
+    'actions.loadMore': '加载更多',
+    'actions.generateNow': '立即生成',
+    'states.loading': '加载中...',
+    'states.noTrendingData': '暂无热点数据',
+    'states.noPostsWithTag': '没有找到带有该标签的帖子',
+    'states.noPosts': '没有帖子，请刷新试试'
   }
 };
 
@@ -73,6 +85,9 @@ const enResources = {
     'sidebar.trendingInAI': 'Trending in AI',
     'sidebar.posts': 'posts',
     'sidebar.follow': 'Follow',
+    'sidebar.neverUpdated': 'Never updated',
+    'sidebar.updatedAt': 'Updated at {{time}}',
+    'sidebar.updatedOn': 'Updated on {{date}} {{time}}',
     
     // Post related
     'post.like': 'Like',
@@ -102,11 +117,20 @@ const enResources = {
     'stats.datasets': 'Datasets',
     'stats.spaces': 'Spaces',
     
-    // Prompts
-    'refresh': 'Refresh',
-    'loadMore': 'Load More',
-    'noPostsWithTag': 'No posts with this tag',
-    'noPosts': 'No posts found, try refreshing'
+    // Trending Topics
+    'trending.topic': 'Trending Topic',
+    'trending.popularity': 'Popularity',
+    'trending.count': 'items',
+    'trending.summary': 'Trend Summary',
+    
+    // Actions and States
+    'actions.refresh': 'Refresh',
+    'actions.loadMore': 'Load More',
+    'actions.generateNow': 'Generate Now',
+    'states.loading': 'Loading...',
+    'states.noTrendingData': 'No trending data available',
+    'states.noPostsWithTag': 'No posts with this tag',
+    'states.noPosts': 'No posts found, try refreshing'
   }
 };
 

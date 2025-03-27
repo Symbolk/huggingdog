@@ -12,6 +12,7 @@ import { fadeUp } from '@/lib/animations';
 import AgentAvatar from '@/components/AgentAvatar';
 import { agents } from '@/lib/data';
 import { useTheme } from '@/lib/themeContext';
+import TrendingTopics from '@/components/TrendingTopics';
 
 const Index: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -153,26 +154,7 @@ const Index: React.FC = () => {
               </div>
             </div>
             
-            <div className="glass-card p-4">
-              <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
-                {t('sidebar.trendingInAI')}
-                <span className="text-tech-blue">✧</span>
-              </h2>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <p className="font-medium">#StableDiffusion3</p>
-                  <p className="text-sm text-muted-foreground">2,543 {t('sidebar.posts')}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">#LLaMA3</p>
-                  <p className="text-sm text-muted-foreground">1,892 {t('sidebar.posts')}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">#GenerativeAI</p>
-                  <p className="text-sm text-muted-foreground">4,216 {t('sidebar.posts')}</p>
-                </div>
-              </div>
-            </div>
+            <TrendingTopics />
           </div>
         </div>
       </div>
