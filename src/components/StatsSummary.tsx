@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { huggingFaceService } from '../services/api/huggingfaceService';
-import { FileText, Database, CircuitBoard, BrainCircuit } from 'lucide-react';
+import { BarChart3, FileText, Database, Layout } from 'lucide-react';
 import { fadeIn } from '../lib/animations';
 import { useTranslation } from 'react-i18next';
 import { HFDataset, HFModel, HFPaper, HFSpace } from '../lib/types';
@@ -35,7 +34,7 @@ const StatsSummary: React.FC = () => {
       try {
         // 创建获取每个类别最新数据的请求
         const [papers, models, datasets, spaces] = await Promise.allSettled([
-          huggingFaceService.getLatestPapers(50),
+          huggingFaceService.getLatestPapers(50), // 增加获取论文数量以确保获取足够的最新数据
           huggingFaceService.getLatestModels(20),
           huggingFaceService.getLatestDatasets(20),
           huggingFaceService.getLatestSpaces(20)
@@ -45,7 +44,7 @@ const StatsSummary: React.FC = () => {
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(0, 0, 0, 0);
+        yesterday.setHours(0, 0, 0, 0); // 将时间设置为昨天的开始
 
         // 格式化时间范围字符串
         const formatDate = (date: Date) => {
@@ -127,36 +126,36 @@ const StatsSummary: React.FC = () => {
     { 
       label: t('stats.papers'), 
       count: stats.papers, 
-      icon: <FileText className="h-5 w-5 text-cyber-secondary" />,
-      bgColor: 'bg-tech-dark/60 border border-cyber-secondary/30'
+      icon: <FileText className="h-5 w-5 text-blue-500" />,
+      bgColor: 'bg-blue-100 dark:bg-blue-900/30'
     },
     { 
       label: t('stats.models'), 
       count: stats.models, 
-      icon: <BrainCircuit className="h-5 w-5 text-cyber-primary" />,
-      bgColor: 'bg-tech-dark/60 border border-cyber-primary/30'
+      icon: <BarChart3 className="h-5 w-5 text-green-500" />,
+      bgColor: 'bg-green-100 dark:bg-green-900/30'
     },
     { 
       label: t('stats.datasets'), 
       count: stats.datasets, 
-      icon: <Database className="h-5 w-5 text-[#D946EF]" />,
-      bgColor: 'bg-tech-dark/60 border border-[#D946EF]/30'
+      icon: <Database className="h-5 w-5 text-purple-500" />,
+      bgColor: 'bg-purple-100 dark:bg-purple-900/30'
     },
     { 
       label: t('stats.spaces'), 
       count: stats.spaces, 
-      icon: <CircuitBoard className="h-5 w-5 text-cyber-accent" />,
-      bgColor: 'bg-tech-dark/60 border border-cyber-accent/30'
+      icon: <Layout className="h-5 w-5 text-orange-500" />,
+      bgColor: 'bg-orange-100 dark:bg-orange-900/30'
     }
   ];
 
   if (stats.isLoading) {
     return (
-      <div className={`p-3 ${fadeIn()}`}>
+      <div className={`glass-card p-3 ${fadeIn()}`}>
         <h3 className="text-sm font-medium text-muted-foreground mb-1.5">{t('stats.todayActivity')}</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="flex flex-col items-center p-1.5 rounded-lg animate-pulse bg-tech-dark/50 cyber-border">
+            <div key={i} className="flex flex-col items-center p-1.5 rounded-lg animate-pulse bg-secondary/50">
               <div className="w-5 h-5 rounded-full bg-muted-foreground/20 mb-1"></div>
               <div className="h-5 w-8 bg-muted-foreground/20 rounded mb-1"></div>
               <div className="h-3 w-14 bg-muted-foreground/20 rounded"></div>
@@ -173,19 +172,18 @@ const StatsSummary: React.FC = () => {
   }
 
   return (
-    <div className={`p-3 ${fadeIn()}`}>
-      <h3 className="text-sm font-medium text-cyber-secondary mb-1.5 flex items-center">
-        <span className="mr-1 w-1.5 h-1.5 bg-cyber-secondary rounded-full inline-block animate-pulse-slow"></span>
+    <div className={`glass-card p-3 ${fadeIn()}`}>
+      <h3 className="text-sm font-medium text-muted-foreground mb-1.5">
         {stats.timeRange ? `${stats.timeRange} ${t('stats.todayActivity')}` : t('stats.todayActivity')}
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {statItems.map((item, index) => (
           <div 
             key={index} 
-            className={`flex flex-col items-center p-1.5 rounded-lg cyber-highlight ${item.bgColor} ${fadeIn(index + 1)}`}
+            className={`flex flex-col items-center p-1.5 rounded-lg ${item.bgColor} ${fadeIn(index + 1)}`}
           >
             {item.icon}
-            <span className="text-xl font-bold mt-0.5 font-cyber">{item.count}</span>
+            <span className="text-xl font-bold mt-0.5">{item.count}</span>
             <span className="text-xs text-muted-foreground">{item.label}</span>
           </div>
         ))}

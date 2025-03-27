@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { cn } from "../lib/utils";
 import Post from './Post';
 import { fadeUp } from '../lib/animations';
 import { usePosts } from '../hooks/usePosts';
 import { Button } from './ui/button';
-import { ArrowDown, ZapIcon } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface FeedProps {
@@ -31,21 +30,21 @@ const Feed: React.FC<FeedProps> = ({ className, tag }) => {
         {[1, 2, 3].map((_, index) => (
           <div 
             key={index} 
-            className="cyber-card p-4 animate-pulse"
+            className="glass-card p-4 animate-pulse"
           >
             <div className="flex gap-3">
-              <div className="rounded-full bg-tech-dark/80 w-10 h-10 border border-cyber-secondary/20"></div>
+              <div className="rounded-full bg-muted/30 w-10 h-10"></div>
               <div className="flex-1">
                 <div className="flex gap-2">
-                  <div className="h-4 bg-tech-dark/80 rounded w-24 border border-cyber-secondary/20"></div>
-                  <div className="h-4 bg-tech-dark/80 rounded w-16 border border-cyber-secondary/20"></div>
+                  <div className="h-4 bg-muted/30 rounded w-24"></div>
+                  <div className="h-4 bg-muted/30 rounded w-16"></div>
                 </div>
-                <div className="mt-2 h-4 bg-tech-dark/80 rounded w-full border border-cyber-secondary/20"></div>
-                <div className="mt-1 h-4 bg-tech-dark/80 rounded w-full border border-cyber-secondary/20"></div>
-                <div className="mt-1 h-4 bg-tech-dark/80 rounded w-3/4 border border-cyber-secondary/20"></div>
+                <div className="mt-2 h-4 bg-muted/30 rounded w-full"></div>
+                <div className="mt-1 h-4 bg-muted/30 rounded w-full"></div>
+                <div className="mt-1 h-4 bg-muted/30 rounded w-3/4"></div>
                 <div className="mt-4 flex justify-between">
                   {[1, 2, 3, 4].map((_, i) => (
-                    <div key={i} className="h-4 bg-tech-dark/80 rounded w-8 border border-cyber-secondary/20"></div>
+                    <div key={i} className="h-4 bg-muted/30 rounded w-8"></div>
                   ))}
                 </div>
               </div>
@@ -59,18 +58,14 @@ const Feed: React.FC<FeedProps> = ({ className, tag }) => {
   return (
     <div className="space-y-6">
       {tag && (
-        <div className="cyber-badge inline-flex items-center">
-          <ZapIcon size={12} className="mr-1 text-cyber-secondary" />
+        <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium inline-block">
           #{tag}
         </div>
       )}
 
       <div className={cn("space-y-4", className)}>
         {displayPosts.length === 0 ? (
-          <div className="cyber-card p-8 text-center text-muted-foreground">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full border border-cyber-secondary/30 flex items-center justify-center">
-              <ZapIcon size={24} className="text-cyber-secondary/70" />
-            </div>
+          <div className="glass-card p-8 text-center text-muted-foreground">
             {tag ? t('noPostsWithTag') : t('noPosts')}
           </div>
         ) : (
@@ -86,14 +81,16 @@ const Feed: React.FC<FeedProps> = ({ className, tag }) => {
       
       {displayPosts.length > 0 && (
         <div className="flex justify-center pt-4">
-          <button 
-            className="cyber-button px-4 flex items-center gap-1"
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={() => loadMorePosts()}
             disabled={isLoading}
+            className="flex items-center gap-1"
           >
             <ArrowDown className="h-4 w-4" />
             {t('loadMore')}
-          </button>
+          </Button>
         </div>
       )}
     </div>
